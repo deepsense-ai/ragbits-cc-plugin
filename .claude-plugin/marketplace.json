@@ -8,7 +8,7 @@
   "license": "MIT",
   "plugins": [
     {
-      "name": "ds-archetype-base",
+      "name": "ragbits",
       "description": "Scaffold ragbits applications from templates. Quickly generate chat apps, agents, RAGs, MCP servers and more.",
       "source": "./plugins/ragbits"
     }
