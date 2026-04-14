@@ -1,0 +1,26 @@
+# IDE
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+!*/skills/build/
+.venv/
+*.egg
+
+# Claude Code (user-specific)
+.claude/settings.local.json
+
+# Environment files
+.env
+
+# Temp files
+tmp

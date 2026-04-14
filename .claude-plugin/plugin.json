@@ -1,9 +1,0 @@
-{
-  "name": "ragbits-plugin",
-  "description": "Scaffold ragbits applications from templates. Quickly generate chat apps, agents, RAGs, MCP servers and more.",
-  "version": "0.0.1",
-  "author": {
-    "name": "deepsense.ai"
-  },
-  "license": "MIT"
-}
