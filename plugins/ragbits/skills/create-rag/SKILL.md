@@ -128,22 +128,34 @@ from ragbits.core.vector_stores.qdrant import QdrantVectorStore
 
 ```python
 DOCUMENTS_DIR = Path(__file__).parent.parent / "documents"
-
-
-async def get_document_search() -> DocumentSearch:
-    """Create and return a configured DocumentSearch instance."""
-    embedder = LiteLLMEmbedder(model_name="{embedding_model}")
 ```
 
-Vector store initialization based on selection:
+**IMPORTANT — in-memory singleton pattern**: Because `InMemoryVectorStore` is ephemeral (data is lost when the process exits), the `get_document_search()` function must:
+1. Cache the `DocumentSearch` instance in a module-level variable so it is created only once per process.
+2. Automatically ingest all documents from `DOCUMENTS_DIR` on first call, so that `search.py` and `app.py` always have data available without requiring a separate ingest step.
+
+This pattern is **only needed for `in-memory`**. For persistent stores (`chroma`, `qdrant`), caching is optional and auto-ingest is not needed.
 
 If `in-memory`:
 ```python
+_document_search: DocumentSearch | None = None
+
+
+async def get_document_search() -> DocumentSearch:
+    """Return a cached DocumentSearch instance, auto-ingesting documents on first call."""
+    global _document_search
+    if _document_search is not None:
+        return _document_search
+
+    embedder = LiteLLMEmbedder(model_name="{embedding_model}")
     vector_store = InMemoryVectorStore(embedder=embedder)
 ```
 
 If `chroma`:
 ```python
+async def get_document_search() -> DocumentSearch:
+    """Create and return a configured DocumentSearch instance."""
+    embedder = LiteLLMEmbedder(model_name="{embedding_model}")
     chroma_client = chromadb.PersistentClient(path=".chroma_data")
     vector_store = ChromaVectorStore(
         client=chroma_client,
@@ -154,6 +166,9 @@ If `chroma`:
 
 If `qdrant`:
 ```python
+async def get_document_search() -> DocumentSearch:
+    """Create and return a configured DocumentSearch instance."""
+    embedder = LiteLLMEmbedder(model_name="{embedding_model}")
     qdrant_client = AsyncQdrantClient(path=".qdrant_data")
     vector_store = QdrantVectorStore(
         client=qdrant_client,
@@ -194,9 +209,30 @@ Add optional kwargs:
 
 ```python
     )
+```
+
+If `in-memory` — auto-ingest and cache before returning:
+```python
+    # Auto-ingest documents so the in-memory store is pre-populated
+    documents = [
+        DocumentMeta.from_local_path(file_path)
+        for file_path in DOCUMENTS_DIR.iterdir()
+        if file_path.is_file()
+    ]
+    if documents:
+        await document_search.ingest(documents)
+
+    _document_search = document_search
     return document_search
+```
+
+If `chroma` or `qdrant` — just return:
+```python
+    return document_search
+```
 
 
+```python
 async def ingest_documents() -> None:
     """Ingest all documents from the documents directory."""
     document_search = await get_document_search()
@@ -539,7 +575,31 @@ Wait for the installation to complete and verify there are no errors. If install
 
 After creating all files AND installing dependencies, print a summary:
 
-If NOT `chat-ui`:
+If NOT `chat-ui` and `in-memory` vector store:
+```
+Created ragbits RAG application: {app-name}/
+  - {app_name_snake}/__init__.py (package marker)
+  - {app_name_snake}/ingest.py (document ingestion)
+  - {app_name_snake}/search.py (search & Q&A)
+  - documents/sample.md (sample document)
+  - pyproject.toml (dependencies)
+  - README.md (documentation)
+
+Dependencies installed successfully.
+
+To get started:
+  1. Set your API key: export OPENAI_API_KEY=your-key
+  2. Add documents to the documents/ directory
+  3. Search: python {app_name_snake}/search.py
+
+Note: With in-memory vector store, documents are automatically ingested on each run.
+To use a persistent store, re-run with --vector-store chroma or --vector-store qdrant.
+
+Vector store: {selected store}
+Features: {list of enabled features}
+```
+
+If NOT `chat-ui` and persistent vector store (`chroma` or `qdrant`):
 ```
 Created ragbits RAG application: {app-name}/
   - {app_name_snake}/__init__.py (package marker)
@@ -561,7 +621,34 @@ Vector store: {selected store}
 Features: {list of enabled features}
 ```
 
-If `chat-ui`:
+If `chat-ui` and `in-memory` vector store:
+```
+Created ragbits RAG application: {app-name}/
+  - {app_name_snake}/__init__.py (package marker)
+  - {app_name_snake}/ingest.py (document ingestion)
+  - {app_name_snake}/app.py (chat UI application)
+  - documents/sample.md (sample document)
+  - pyproject.toml (dependencies)
+  - README.md (documentation)
+
+Dependencies installed successfully.
+
+To get started:
+  1. Set your API key: export OPENAI_API_KEY=your-key
+  2. Add documents to the documents/ directory
+  3. Run the app: ragbits api run {app_name_snake}.app:RAGChat
+
+Or run directly:
+  python {app_name_snake}/app.py
+
+Note: With in-memory vector store, documents are automatically ingested on each run.
+To use a persistent store, re-run with --vector-store chroma or --vector-store qdrant.
+
+Vector store: {selected store}
+Features: {list of enabled features}
+```
+
+If `chat-ui` and persistent vector store (`chroma` or `qdrant`):
 ```
 Created ragbits RAG application: {app-name}/
   - {app_name_snake}/__init__.py (package marker)
