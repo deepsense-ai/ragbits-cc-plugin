@@ -1,0 +1,58 @@
+{
+  "cities": [
+    {
+      "name": "Paris",
+      "country": "France",
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Paris",
+      "highlights": ["Eiffel Tower", "Louvre Museum", "Notre-Dame Cathedral", "Champs-Élysées"],
+      "best_season": "Spring (April-June)",
+      "language": "French",
+      "currency": "EUR"
+    },
+    {
+      "name": "London",
+      "country": "United Kingdom",
+      "wikipedia_url": "https://en.wikipedia.org/wiki/London",
+      "highlights": ["Big Ben", "Tower of London", "British Museum", "Buckingham Palace"],
+      "best_season": "Summer (June-August)",
+      "language": "English",
+      "currency": "GBP"
+    },
+    {
+      "name": "Tokyo",
+      "country": "Japan",
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Tokyo",
+      "highlights": ["Shibuya Crossing", "Senso-ji Temple", "Tokyo Tower", "Meiji Shrine"],
+      "best_season": "Spring (March-May)",
+      "language": "Japanese",
+      "currency": "JPY"
+    },
+    {
+      "name": "Rome",
+      "country": "Italy",
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Rome",
+      "highlights": ["Colosseum", "Vatican City", "Trevi Fountain", "Pantheon"],
+      "best_season": "Spring (April-June)",
+      "language": "Italian",
+      "currency": "EUR"
+    },
+    {
+      "name": "Sydney",
+      "country": "Australia",
+      "wikipedia_url": "https://en.wikipedia.org/wiki/Sydney",
+      "highlights": ["Sydney Opera House", "Harbour Bridge", "Bondi Beach", "Royal Botanic Garden"],
+      "best_season": "Spring (September-November)",
+      "language": "English",
+      "currency": "AUD"
+    },
+    {
+      "name": "New York",
+      "country": "United States",
+      "wikipedia_url": "https://en.wikipedia.org/wiki/New_York_City",
+      "highlights": ["Statue of Liberty", "Central Park", "Times Square", "Empire State Building"],
+      "best_season": "Fall (September-November)",
+      "language": "English",
+      "currency": "USD"
+    }
+  ]
+}

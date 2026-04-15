@@ -1,0 +1,45 @@
+{
+  "routes": [
+    {
+      "from": "New York",
+      "to": "Paris",
+      "flights": [
+        {"airline": "Air France", "flight_number": "AF001", "departure": "08:00 AM", "arrival": "09:30 PM", "duration": "7h 30m", "price_usd": 650},
+        {"airline": "British Airways", "flight_number": "BA178", "departure": "10:00 AM", "arrival": "10:00 PM", "duration": "7h 00m", "price_usd": 720},
+        {"airline": "Delta", "flight_number": "DL400", "departure": "01:00 PM", "arrival": "01:00 AM", "duration": "7h 00m", "price_usd": 580}
+      ]
+    },
+    {
+      "from": "New York",
+      "to": "London",
+      "flights": [
+        {"airline": "British Airways", "flight_number": "BA117", "departure": "07:00 PM", "arrival": "07:00 AM", "duration": "7h 00m", "price_usd": 550},
+        {"airline": "Virgin Atlantic", "flight_number": "VS4", "departure": "09:30 PM", "arrival": "09:30 AM", "duration": "7h 00m", "price_usd": 510}
+      ]
+    },
+    {
+      "from": "London",
+      "to": "Tokyo",
+      "flights": [
+        {"airline": "Japan Airlines", "flight_number": "JL44", "departure": "11:00 AM", "arrival": "07:30 AM", "duration": "11h 30m", "price_usd": 890},
+        {"airline": "ANA", "flight_number": "NH212", "departure": "02:00 PM", "arrival": "10:00 AM", "duration": "11h 00m", "price_usd": 920}
+      ]
+    },
+    {
+      "from": "Paris",
+      "to": "Rome",
+      "flights": [
+        {"airline": "Alitalia", "flight_number": "AZ349", "departure": "06:30 AM", "arrival": "08:45 AM", "duration": "2h 15m", "price_usd": 180},
+        {"airline": "Air France", "flight_number": "AF1404", "departure": "12:00 PM", "arrival": "02:10 PM", "duration": "2h 10m", "price_usd": 210}
+      ]
+    },
+    {
+      "from": "San Francisco",
+      "to": "Sydney",
+      "flights": [
+        {"airline": "Qantas", "flight_number": "QF74", "departure": "10:00 PM", "arrival": "06:30 AM", "duration": "15h 30m", "price_usd": 1100},
+        {"airline": "United", "flight_number": "UA863", "departure": "11:30 PM", "arrival": "08:00 AM", "duration": "15h 30m", "price_usd": 980}
+      ]
+    }
+  ]
+}
