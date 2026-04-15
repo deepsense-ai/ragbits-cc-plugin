@@ -4,7 +4,7 @@
 
 A [Claude Code plugin](https://docs.anthropic.com/en/docs/claude-code/plugins) that scaffolds ready-to-run [ragbits](https://ragbits.deepsense.ai) applications from templates.
 
-[Homepage](https://deepsense.ai/rd-hub/ragbits/) | [Documentation](https://ragbits.deepsense.ai) | [Contact](https://deepsense.ai/contact/)
+[Homepage](https://deepsense.ai/rd-hub/ragbits/) | [Ragbits Documentation](https://ragbits.deepsense.ai) | [Contact](https://deepsense.ai/contact/)
 
 ---
 </div>
@@ -42,7 +42,8 @@ Scaffold a ragbits **RAG application** with document ingestion, vector search, a
 Add the plugin to your Claude Code project:
 
 ```bash
-claude plugin add ragbits --url https://github.com/deepsense-ai/ragbits-cc-plugin
+claude plugin marketplace add https://github.com/deepsense-ai/ragbits-cc-plugin.git
+claude plugin install ragbits@ragbits-cc-plugin
 ```
 
 ## License
