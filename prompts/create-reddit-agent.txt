@@ -1,0 +1,9 @@
+Create a Ragbits-based agent that runs once per day with the following steps:
+	1.	Define a clear directory structure and naming convention.
+	2.	Do not use REDDIT_CLIENT_ID or REDDIT_CLIENT_SECRET for authorization. Instead, use the public read-only endpoints that end with .json.
+	3.	Fetch posts from 'r/artificial' from the last 24 hours:
+	  •	Apply time filtering to include only posts from the past 24 hours.
+	  •	Add error handling and logging.
+	4.	Convert the collected posts into Markdown format.
+	5.	Save the Markdown output to a file.
+	6.	Provide a cron-friendly CLI entry point.
