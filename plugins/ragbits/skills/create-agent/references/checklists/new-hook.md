@@ -280,8 +280,8 @@ async def log_agent_result(
     logger.info(
         "Agent run completed | Tools used: %s | Usage: prompt=%d, completion=%d | Content preview: %s",
         tool_names or "none",
-        result.usage.input_tokens or 0,
-        result.usage.output_tokens or 0,
+        result.usage.prompt_tokens or 0,
+        result.usage.completion_tokens or 0,
         str(result.content)[:200],
     )
     return result
@@ -756,7 +756,7 @@ async def post_run_hook(
     - Log the result
     - Modify the content
     - Access tool call history via result.tool_calls
-    - Check token usage via result.usage
+    - Check token usage via result.usage (properties: prompt_tokens, completion_tokens, total_tokens)
 
     Args:
         result: The agent result.
