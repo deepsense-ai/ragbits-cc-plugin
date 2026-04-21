@@ -1,42 +1,35 @@
 ---
 name: create-chat
-description: Scaffold a new ragbits chat application. Use when the user wants to create a chat app, chatbot, or conversational UI powered by ragbits.
-disable-model-invocation: true
-argument-hint: "[app-name] [--model MODEL] [--features FEATURES]"
-allowed-tools: Bash(mkdir *) Bash(pip *) Bash(uv *) Write Edit Read Glob Grep
+description: Scaffold a new ragbits chat application. Triggers whenever the user wants to create, build, or set up a conversational chat app, chatbot, web assistant, or streaming Q&A interface powered by the ragbits library — including simple chat UIs, login-protected bots, feedback-enabled assistants, branded chat surfaces, file-upload chats, tool-using agent chats, and RAG-backed document chats served via the ragbits web UI. Use even for "build me a ragbits chatbot with a web UI", "I need a branded chat assistant", or "set up a streaming chat that calls my tools".
 ---
 
 # Create a Ragbits Chat Application
 
-Generate a complete, ready-to-run ragbits chat application based on user requirements.
+Scaffold a complete, immediately runnable ragbits chat application. Generate the full template first, install dependencies, then let the user customize.
 
-## Arguments
+## Parse Arguments
 
-Parse `$ARGUMENTS` to extract:
-- **app-name** (first positional arg, default: `my-chat`) — the project directory name
-- **--model MODEL** (optional, default: `gpt-4o-mini`) — the LLM model to use via LiteLLM
-- **--features FEATURES** (optional, comma-separated) — extra features to include. Supported: `auth`, `agents`, `upload`, `feedback`, `theme`, `document-search`
+Parse `$ARGUMENTS`:
+- **app-name** (first positional, default: `my-chat`) — project directory name
+- **description** (remaining free-form text, optional) — what the chat should do; drives the system prompt and feature inference
+- **--model MODEL** (default: `gpt-4o-mini`) — any LiteLLM-compatible model name
+- **--features FEATURES** (comma-separated, optional) — any of `auth`, `agents`, `upload`, `feedback`, `theme`, `document-search`
 
-If `$ARGUMENTS` is empty, ask the user what they want to build before proceeding. Otherwise infer from the description.
+If `$ARGUMENTS` is empty and there is no prior context describing what to build, ask one message:
 
-## Step 1: Gather Requirements
+> "What should the chat be called, and what will it do? (e.g. `support-bot A chat assistant that answers product questions`)"
 
-Based on the arguments and conversation context, determine:
-1. **App name** — used for the directory and module name
-2. **LLM model** — which model to use (default: `gpt-4o-mini`)
-3. **Features** — which capabilities to include:
-   - `auth` — add authentication with test users
-   - `agents` — add agent with tool support
-   - `upload` — add file upload handling
-   - `feedback` — add like/dislike feedback forms
-   - `theme` — add UI customization with HeroUI theme support
-   - `document-search` — add RAG with document search
+Generate immediately after receiving an answer. Map natural-language cues to features without asking follow-ups:
+- "login", "users", "accounts" → `auth`
+- "tools", "calls my APIs", "takes actions" → `agents`
+- "file upload", "attach documents", "drag and drop" → `upload`
+- "thumbs up/down", "rating", "feedback forms" → `feedback`
+- "branded UI", "logo", "customize look" → `theme`
+- "search my docs", "answer from my knowledge base", "RAG" → `document-search`
 
-If the user described what they want in natural language, map it to the above features. For example, "a chat with file upload and login" means features: `auth`, `upload`.
+For deeper domain questions (tone, starter flows, audience), see `references/interview-checklist.md`.
 
-## Step 2: Create Project Structure
-
-Create the following directory layout:
+## Project Structure
 
 ```
 {app-name}/
@@ -44,16 +37,16 @@ Create the following directory layout:
 ├── README.md
 └── {app_name_snake}/
     ├── __init__.py
-    └── app.py
+    └── app.py          # ChatInterface subclass + RagbitsAPI launcher
 ```
 
-Where `{app_name_snake}` is the app name converted to snake_case (hyphens to underscores).
+`{app_name_snake}` = app-name converted to snake_case (hyphens → underscores). Always write an empty `__init__.py` so the directory is a valid Python package.
 
-**IMPORTANT**: Always create an empty `__init__.py` in the `{app_name_snake}/` directory so it is a valid Python package.
+Add `tools.py` (when `agents`), a `documents/` folder + `ingest.py` (when `document-search`), or upload storage scaffolding (when `upload`) per the relevant checklist.
 
-## Step 3: Generate pyproject.toml
+## Generate Files
 
-Use this template:
+### pyproject.toml
 
 ```toml
 [project]
@@ -65,15 +58,13 @@ dependencies = [
 ]
 ```
 
-Add extra dependencies based on features:
-- If `agents`: add `"ragbits-agents"`
-- If `document-search`: add `"ragbits-document-search"`
+Append based on configuration (combine as needed):
+- `agents` feature → add `"ragbits-agents"`
+- `document-search` feature → add `"ragbits-document-search"` and `"ragbits-core"`
 
-## Step 4: Generate the Chat Application (app.py)
+### app.py
 
-Build the `app.py` file by composing these building blocks based on selected features.
-
-### Base (always included)
+Canonical pattern. `ChatInterface` is the base class; `chat()` is an async generator that **yields** typed responses (text chunks, references, live updates, images, follow-ups). `RagbitsAPI` wraps it and serves the built-in web UI.
 
 ```python
 from collections.abc import AsyncGenerator
@@ -82,266 +73,137 @@ from ragbits.chat.interface import ChatInterface
 from ragbits.chat.interface.types import ChatContext, ChatResponse
 from ragbits.core.llms import LiteLLM
 from ragbits.core.prompt.base import ChatFormat
-```
 
-### If `feedback` feature is enabled, add:
-
-```python
-from typing import Literal
-from pydantic import BaseModel, ConfigDict, Field
-from ragbits.chat.interface.forms import FeedbackConfig, UserSettings
-```
-
-And create Pydantic form models:
-
-```python
-class LikeForm(BaseModel):
-    model_config = ConfigDict(title="Like Form", json_schema_serialization_defaults_required=True)
-    reason: str = Field(description="Why do you like this?", min_length=1)
+# --- feature imports: add only what the selected features require ---
+{feature_imports}
+# --- end feature imports ---
 
 
-class DislikeForm(BaseModel):
-    model_config = ConfigDict(title="Dislike Form", json_schema_serialization_defaults_required=True)
-    issue_type: Literal["Incorrect information", "Not helpful", "Unclear", "Other"] = Field(
-        description="What was the issue?"
-    )
-    feedback: str = Field(description="Please provide more details", min_length=1)
-```
+{feature_level_definitions}
 
-### If `auth` feature is enabled, add:
 
-```python
-from ragbits.chat.auth import ListAuthenticationBackend
-from ragbits.chat.auth.session_store import InMemorySessionStore
-```
-
-And create an auth backend factory:
-
-```python
-def get_auth_backend() -> ListAuthenticationBackend:
-    users = [
-        {
-            "user_id": "1",
-            "username": "admin",
-            "password": "admin123",
-            "email": "admin@example.com",
-            "full_name": "Admin User",
-            "roles": ["admin"],
-        },
-        {
-            "user_id": "2",
-            "username": "user",
-            "password": "user123",
-            "email": "user@example.com",
-            "full_name": "Regular User",
-            "roles": ["user"],
-        },
-    ]
-    return ListAuthenticationBackend(users, session_store=InMemorySessionStore())
-```
-
-### If `agents` feature is enabled, add:
-
-```python
-from ragbits.agents import Agent, ToolCallResult
-from ragbits.core.llms import ToolCall
-from ragbits.chat.interface.types import LiveUpdateType
-```
-
-### If `upload` feature is enabled, add:
-
-```python
-from fastapi import UploadFile
-```
-
-### If `theme` feature is enabled, add:
-
-```python
-from ragbits.chat.interface.ui_customization import (
-    HeaderCustomization,
-    PageMetaCustomization,
-    UICustomization,
-)
-```
-
-### ChatInterface class
-
-Build the class with these patterns:
-
-```python
 class Chat(ChatInterface):
     """Ragbits chat application."""
 
     conversation_history = True
-```
+    {optional_class_attributes}
 
-If `theme` feature:
-```python
-    ui_customization = UICustomization(
-        header=HeaderCustomization(
-            title="{App Name}",
-            subtitle="Powered by ragbits",
-            logo="💬",
-        ),
-        welcome_message="Hello! How can I help you today?",
-        starter_questions=[
-            "What can you help me with?",
-            "Tell me about yourself",
-        ],
-        meta=PageMetaCustomization(favicon="💬", page_title="{App Name}"),
-    )
-```
-
-If `feedback` feature:
-```python
-    feedback_config = FeedbackConfig(
-        like_enabled=True,
-        like_form=LikeForm,
-        dislike_enabled=True,
-        dislike_form=DislikeForm,
-    )
-```
-
-Constructor — if `agents` feature:
-```python
     def __init__(self) -> None:
         self.llm = LiteLLM(model_name="{model}")
-        self.agent = Agent(llm=self.llm, tools=[...])
-```
+        {optional_constructor_extras}
 
-Otherwise:
-```python
-    def __init__(self) -> None:
-        self.llm = LiteLLM(model_name="{model}")
-```
-
-Chat method — if `agents` feature, use agent streaming:
-```python
     async def chat(
         self,
         message: str,
         history: ChatFormat,
         context: ChatContext,
     ) -> AsyncGenerator[ChatResponse, None]:
-        stream = self.agent.run_streaming(message)
-        async for response in stream:
-            match response:
-                case str():
-                    if response.strip():
-                        yield self.create_text_response(response)
-                case ToolCall():
-                    yield self.create_live_update(
-                        response.id, LiveUpdateType.START,
-                        f"Using {response.name}", "Processing..."
-                    )
-                case ToolCallResult():
-                    yield self.create_live_update(
-                        response.id, LiveUpdateType.FINISH,
-                        f"{response.name} completed",
-                    )
-```
+        {chat_body}
 
-Otherwise, use simple LLM streaming:
-```python
-    async def chat(
-        self,
-        message: str,
-        history: ChatFormat,
-        context: ChatContext,
-    ) -> AsyncGenerator[ChatResponse, None]:
-        streaming_result = self.llm.generate_streaming(
-            [*history, {"role": "user", "content": message}]
-        )
-        async for chunk in streaming_result:
-            yield self.create_text_response(chunk)
-```
+    {optional_upload_handler}
 
-If `upload` feature, add upload handler:
-```python
-    async def upload_handler(self, file: UploadFile) -> None:
-        content = await file.read()
-        print(f"Received file: {file.filename}, size: {len(content)} bytes")
-```
 
-### Main block
-
-If `auth` feature:
-```python
 if __name__ == "__main__":
     from ragbits.chat.api import RagbitsAPI
 
-    RagbitsAPI(Chat, auth_backend=get_auth_backend()).run()
+    {ragbitsapi_invocation}
 ```
 
-Otherwise:
+Fill `{...}` placeholders based on the selected features. The **base** chat body (no features) streams the LLM reply with conversation history:
+
 ```python
-if __name__ == "__main__":
-    from ragbits.chat.api import RagbitsAPI
-
-    RagbitsAPI(Chat).run()
+messages: ChatFormat = [*history, {"role": "user", "content": message}]
+async for chunk in self.llm.generate_streaming(messages):
+    yield self.create_text_response(chunk)
 ```
 
-## Step 5: Generate README.md
+Write a domain-appropriate `SYSTEM_PROMPT` when the description is specific, and prepend it to `messages` as a `{"role": "system", "content": SYSTEM_PROMPT}` entry. Generic chats can stay prompt-less.
 
-Create a README with:
-- App name and description
-- How to install dependencies: `pip install -e .` or `uv pip install -e .`
-- How to run the app — list ALL three methods:
-  1. `ragbits api run {app_name_snake}.app:Chat` (recommended, via ragbits CLI)
-  2. `python -m {app_name_snake}.app` (note: use dots, NOT slashes)
+Notes on the template:
+- `conversation_history = True` lets the built-in UI replay prior turns back into `history`. Set to `False` for stateless Q&A surfaces.
+- `chat()` is an async generator. Each `yield self.create_*(...)` is a streaming event the UI renders incrementally.
+- The ragbits CLI (`ragbits api run module:Class`) is the preferred launcher — it picks up logging, lifespan, and dev-mode niceties. `python -m ...` works too.
+
+For advanced yield types (live updates, references, images, state, follow-ups, usage reports) see `references/chat-spec.md`.
+
+### README.md
+
+Include:
+- What the chat does (from the description)
+- Prerequisites (`OPENAI_API_KEY`, or the env var for the chosen model)
+- Setup: `pip install -e .`
+- Run — list all three methods:
+  1. `ragbits api run {app_name_snake}.app:Chat` (preferred)
+  2. `python -m {app_name_snake}.app`
   3. `python {app_name_snake}/app.py` (direct script execution)
-- If `auth`: include the `--auth` flag and test credentials
-- List of enabled features
+- With `auth`: include the `--auth` flag and seed credentials
+- With `upload`: note the expected file types and how uploads are handled
+- With `document-search`: how to add documents and ingest them
+- List of enabled features, customization pointers to the reference files
 
-**IMPORTANT**: In all commands and documentation, use **dots** for Python module paths (e.g. `my_chat.app`), never slashes. Slashes are only for filesystem paths when running a script directly with `python path/to/app.py`.
+Always use **dots** in Python module paths (`my_chat.app`), not slashes. Slashes appear only when invoking a script file directly (`python path/to/app.py`).
 
-## Step 6: Install Dependencies
+## Component Extensions
 
-**CRITICAL**: After generating all files, you MUST install the project dependencies before the app can run.
+Read the relevant checklist when the description or feature flag calls for it. Generate the component without asking follow-up questions.
 
-### Detect local ragbits development
+| User mentions / flag              | Read                                             | What to add                                            | Dependency                |
+|-----------------------------------|--------------------------------------------------|--------------------------------------------------------|---------------------------|
+| `auth` feature                    | `references/checklists/new-auth.md`              | `ListAuthenticationBackend` factory + `__main__` wiring | `ragbits-chat`            |
+| `feedback` feature                | `references/checklists/new-feedback.md`          | Pydantic forms + `FeedbackConfig`                      | `ragbits-chat`            |
+| `theme` feature                   | `references/checklists/new-theme.md`             | `UICustomization` block                                | `ragbits-chat`            |
+| `agents` feature                  | `references/checklists/new-agents.md`            | `Agent` + tools + streaming tool events                | `ragbits-agents`          |
+| `upload` feature                  | `references/checklists/new-upload.md`            | `upload_handler(UploadFile)` + storage guidance        | `ragbits-chat` (bundles FastAPI) |
+| `document-search` feature         | `references/checklists/new-document-search.md`   | `DocumentSearch` + `ingest.py` + reference-yielding chat | `ragbits-document-search` |
 
-First, check if a `packages/` directory exists in the ragbits repo root (parent or ancestor of the current working directory). Look for a path like `{some_ancestor}/packages/ragbits-core/`.
+For advanced patterns (state updates, live-update types, follow-up messages, custom response classes, per-user settings) see `references/chat-spec.md`.
 
-**If local ragbits packages are found** (i.e. developing ragbits from source), install from local paths to avoid version conflicts with PyPI:
+## Install Dependencies
+
+After generating all files, detect if working inside a local ragbits source repo:
 
 ```bash
-pip install -e {path_to_ragbits_repo}/packages/ragbits-core \
-            -e {path_to_ragbits_repo}/packages/ragbits-chat
+find . -maxdepth 6 -name "ragbits-core" -type d 2>/dev/null | head -1
 ```
 
-Add additional local packages based on features:
-- If `agents`: also add `-e {path_to_ragbits_repo}/packages/ragbits-agents`
-- If `document-search`: also add `-e {path_to_ragbits_repo}/packages/ragbits-document-search`
-
-**If NOT in a local ragbits repo** (normal user), install from PyPI:
-
+**If found (developing ragbits from source):**
 ```bash
-cd {app-name}
-pip install -e .
+pip install -e {path_to_repo}/packages/ragbits-core \
+            -e {path_to_repo}/packages/ragbits-chat
 ```
 
-Wait for the installation to complete and verify there are no errors. If installation fails, help the user troubleshoot.
+Add matching local packages per feature:
+- `agents` → also `-e {path_to_repo}/packages/ragbits-agents`
+- `document-search` → also `-e {path_to_repo}/packages/ragbits-document-search`
 
-## Step 7: Summary
+**Otherwise:**
+```bash
+cd {app-name} && pip install -e .
+```
 
-After creating all files AND installing dependencies, print a summary:
+Wait for installation to complete. If it fails, show the error and suggest a fix.
+
+## Summary
+
+After files are generated and dependencies are installed, print a summary matching the selected shape:
 
 ```
-Created ragbits chat application: {app-name}/
-  - {app_name_snake}/__init__.py (package marker)
-  - {app_name_snake}/app.py (main application)
-  - pyproject.toml (dependencies)
-  - README.md (documentation)
+Created {app-name}/
+  {app_name_snake}/app.py      — ChatInterface subclass + launcher
+  pyproject.toml               — project + dependencies
+  README.md                    — setup, run, customization
 
-Dependencies installed successfully.
+Features: {list of enabled features, or "none"}
 
-To run:
+Run:
   cd {app-name}
   ragbits api run {app_name_snake}.app:Chat
 
-Or run directly:
-  python {app_name_snake}/app.py
-
-Features: {list of enabled features}
+Next steps:
+  • Tune the system prompt in app.py for your domain
+  • Add tools (with --features agents): see references/checklists/new-agents.md
+  • Add login (with --features auth):    see references/checklists/new-auth.md
+  • Brand the UI (with --features theme): see references/checklists/new-theme.md
 ```
+
+Show the `--auth` login hint and seed credentials when `auth` is enabled. Add a documents/ingestion instruction block when `document-search` is enabled.

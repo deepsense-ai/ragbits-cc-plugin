@@ -1,0 +1,137 @@
+{
+  "skill_name": "ragbits:create-chat",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Create a ragbits chat application called assistant — a general-purpose chat that streams responses from gpt-4o-mini. No extra features.",
+      "expected_output": "An assistant/ directory with pyproject.toml (ragbits-chat only), README.md, assistant/__init__.py, and assistant/app.py. app.py subclasses ChatInterface, implements async chat() that calls LiteLLM.generate_streaming and yields self.create_text_response per chunk. Main block launches RagbitsAPI(Chat).run(). Dependencies installed.",
+      "files": [],
+      "assertions": [
+        {
+          "name": "project_directory_created",
+          "description": "assistant/ directory exists"
+        },
+        {
+          "name": "app_file_exists",
+          "description": "assistant/app.py exists and imports ChatInterface, ChatContext, ChatResponse, LiteLLM"
+        },
+        {
+          "name": "init_file_exists",
+          "description": "assistant/__init__.py exists so the directory is a valid package"
+        },
+        {
+          "name": "pyproject_has_only_chat",
+          "description": "pyproject.toml depends on ragbits-chat and does NOT list ragbits-agents or ragbits-document-search (no extra features were requested)"
+        },
+        {
+          "name": "chat_method_streams",
+          "description": "chat() calls llm.generate_streaming and yields self.create_text_response(chunk) in an async for loop"
+        },
+        {
+          "name": "main_block_uses_ragbitsapi",
+          "description": "The __main__ block imports RagbitsAPI and calls RagbitsAPI(Chat).run() without an auth_backend argument"
+        },
+        {
+          "name": "readme_lists_three_run_commands",
+          "description": "README.md lists all three run commands: ragbits api run ..., python -m ..., and python path/to/app.py"
+        },
+        {
+          "name": "conversation_history_enabled",
+          "description": "Chat class has conversation_history = True (or explicitly sets it, so prior turns are replayed)"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Build a ragbits chat application called weather-bot — an agent that calls a weather API tool, streams its reasoning as live updates, and has a branded UI with a weather-themed title and starter questions.",
+      "expected_output": "A weather-bot/ directory. pyproject.toml depends on ragbits-chat AND ragbits-agents. app.py has a tools.py (or an inline TOOLS list) with a weather-fetching tool, instantiates self.agent = Agent(llm, tools=TOOLS), and its chat() method uses agent.run_streaming and pattern-matches ToolCall/ToolCallResult events into self.create_live_update(..., LiveUpdateType.START/FINISH). UICustomization has a weather-themed title, subtitle, logo, and 2+ starter questions drawn from the weather domain. Dependencies installed.",
+      "files": [],
+      "assertions": [
+        {
+          "name": "project_directory_created",
+          "description": "weather-bot/ directory exists"
+        },
+        {
+          "name": "agents_dependency_declared",
+          "description": "pyproject.toml lists ragbits-agents in addition to ragbits-chat"
+        },
+        {
+          "name": "agent_instantiated_in_init",
+          "description": "app.py creates self.agent = Agent(llm=..., tools=...) inside __init__"
+        },
+        {
+          "name": "tool_is_domain_specific",
+          "description": "At least one tool function relates to weather, forecast, temperature, or location lookup (not just example_tool unchanged)"
+        },
+        {
+          "name": "chat_uses_run_streaming",
+          "description": "chat() calls self.agent.run_streaming(...) and pattern-matches on ToolCall/ToolCallResult events"
+        },
+        {
+          "name": "tool_events_become_live_updates",
+          "description": "ToolCall yields a LiveUpdateType.START live update; ToolCallResult yields LiveUpdateType.FINISH with the same id"
+        },
+        {
+          "name": "ui_customization_weather_themed",
+          "description": "ui_customization has a weather-themed title, a weather-appropriate logo/emoji, and 2+ starter questions tied to weather queries"
+        },
+        {
+          "name": "text_chunks_still_stream",
+          "description": "chat() still yields self.create_text_response(chunk) for str events so the final reply streams into the UI"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Create a ragbits chat app called hr-assistant that answers employee HR questions using the company's policy documents. It needs a web UI, login-protected access, like/dislike feedback forms, and document search.",
+      "expected_output": "An hr-assistant/ directory. pyproject.toml depends on ragbits-chat, ragbits-document-search, and ragbits-core. app.py defines LikeForm/DislikeForm Pydantic models, a get_auth_backend() factory with ListAuthenticationBackend + InMemorySessionStore + at least one seed user, a Chat class with conversation_history=True, feedback_config referencing both forms, a cached _get_document_search() using InMemoryVectorStore + LiteLLMEmbedder + auto-ingest from a documents/ folder, and a chat() method that yields references before streaming the grounded answer. The __main__ block calls RagbitsAPI(Chat, auth_backend=get_auth_backend()).run(). README documents the seed credentials and ingestion workflow.",
+      "files": [],
+      "assertions": [
+        {
+          "name": "project_directory_created",
+          "description": "hr-assistant/ directory exists"
+        },
+        {
+          "name": "document_search_deps_declared",
+          "description": "pyproject.toml lists ragbits-document-search AND ragbits-core in addition to ragbits-chat"
+        },
+        {
+          "name": "documents_folder_exists",
+          "description": "hr-assistant/documents/ exists with at least one sample file so the app can ingest something on first run"
+        },
+        {
+          "name": "auth_backend_factory_present",
+          "description": "app.py defines get_auth_backend() returning a ListAuthenticationBackend with InMemorySessionStore and at least one seed user"
+        },
+        {
+          "name": "feedback_forms_defined",
+          "description": "app.py defines LikeForm and DislikeForm with json_schema_serialization_defaults_required=True and required fields"
+        },
+        {
+          "name": "feedback_config_attached",
+          "description": "Chat class has a feedback_config class attribute referencing LikeForm and DislikeForm"
+        },
+        {
+          "name": "document_search_cached",
+          "description": "app.py has a _get_document_search (or get_document_search) helper that caches the DocumentSearch instance so in-memory data isn't lost between turns"
+        },
+        {
+          "name": "auto_ingest_on_first_call",
+          "description": "The cached factory iterates documents/ and calls document_search.ingest(...) the first time it is invoked"
+        },
+        {
+          "name": "chat_yields_references_before_answer",
+          "description": "chat() calls self.create_reference(...) for retrieved elements and THEN streams the LLM answer via self.create_text_response"
+        },
+        {
+          "name": "main_block_passes_auth_backend",
+          "description": "__main__ calls RagbitsAPI(Chat, auth_backend=get_auth_backend()).run() — not the default single-arg form"
+        },
+        {
+          "name": "readme_documents_credentials_and_ingest",
+          "description": "README lists the seed credentials (flagged as demo-only) and tells the user how to add documents"
+        }
+      ]
+    }
+  ]
+}
