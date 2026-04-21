@@ -4,8 +4,8 @@ Quality gates for adding a new prompt to a ragbits agent.
 
 ## Definition Requirements
 
-- [ ] Prompt subclasses `Prompt[InputModel, OutputType]` with both generic parameters specified
-- [ ] Input model is a Pydantic `BaseModel` (or `None` if no input is needed)
+- [ ] Prompt subclasses `Prompt[InputModel]` (single-arg form, output defaults to `str`) or `Prompt[InputModel, OutputType]` (when you want structured output)
+- [ ] Input model is a Pydantic `BaseModel` (use `None` if no input is needed)
 - [ ] `user_prompt` class attribute is defined with Jinja2 template placeholders matching input model fields
 - [ ] `system_prompt` class attribute is defined (optional but recommended)
 - [ ] Template variables in `user_prompt` / `system_prompt` match field names in the input model exactly
@@ -30,7 +30,7 @@ class MyInput(BaseModel):
     detail_level: str
 
 
-class MyPrompt(Prompt[MyInput, str]):
+class MyPrompt(Prompt[MyInput]):
     """Prompt for generating content about a topic."""
 
     system_prompt = """
@@ -56,9 +56,11 @@ Templates use **Jinja2** syntax:
 ### String output (default)
 
 ```python
-class MyPrompt(Prompt[MyInput, str]):
+class MyPrompt(Prompt[MyInput]):
     user_prompt = "..."
 ```
+
+`Prompt[MyInput]` and `Prompt[MyInput, str]` are equivalent — the single-arg form is the convention used across the canonical ragbits agent examples.
 
 ### Structured output (Pydantic model)
 
@@ -111,7 +113,7 @@ agent = Agent(
 
 # Run the agent — input is passed as the prompt's input model
 result = await agent.run(MyInput(topic="ragbits", detail_level="detailed"))
-print(result.content)
+print(result.content)  # `result` is an AgentResult; `.content` is the parsed output
 ```
 
 ## Usage with LLM directly (without Agent)
@@ -131,13 +133,14 @@ parsed = await prompt.parse_response(response)
 For prompts that don't need structured input:
 
 ```python
-class SimplePrompt(Prompt[None, str]):
+class SimplePrompt(Prompt[None]):
     system_prompt = "You are a helpful assistant."
     user_prompt = "What is the meaning of life?"
 
 # Usage
 agent = Agent(llm=llm, prompt=SimplePrompt)
 result = await agent.run(None)
+print(result.content)
 ```
 
 ## Few-Shot Examples

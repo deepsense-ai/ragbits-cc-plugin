@@ -1,9 +1,72 @@
-Create a Ragbits-based agent that runs once per day with the following steps:
-	1.	Define a clear directory structure and naming convention.
-	2.	Do not use REDDIT_CLIENT_ID or REDDIT_CLIENT_SECRET for authorization. Instead, use the public read-only endpoints that end with .json.
-	3.	Fetch posts from 'r/artificial' from the last 24 hours:
-	  •	Apply time filtering to include only posts from the past 24 hours.
-	  •	Add error handling and logging.
-	4.	Convert the collected posts into Markdown format.
-	5.	Save the Markdown output to a file.
-	6.	Provide a cron-friendly CLI entry point.
+Create a Ragbits-based agent using ragbits library that runs once per day with the following steps:
+
+1. Define a clear directory structure and naming convention.
+
+2. Reddit access — no OAuth
+   - Use the public read-only .json endpoints (e.g. https://www.reddit.com/r/artificial/new.json).
+     Do NOT use REDDIT_CLIENT_ID or REDDIT_CLIENT_SECRET.
+   - Reddit's anti-bot filter rejects naive Python clients with HTTP 403, so the
+     fetch code must mimic a browser:
+       • Use an httpx.Client (persistent, cookies carry across requests),
+         follow_redirects=True.
+       • Send a full Chrome-like header set: User-Agent, Accept,
+         Accept-Language, Accept-Encoding, Connection, DNT,
+         Upgrade-Insecure-Requests, Sec-Fetch-Dest/Mode/Site,
+         Sec-Ch-Ua, Sec-Ch-Ua-Mobile, Sec-Ch-Ua-Platform, Referer.
+       • Prime the session by GETting https://www.reddit.com/r/{subreddit}/
+         (the HTML page) before calling the .json endpoint, so any consent/
+         session cookies are set and echoed on subsequent requests.
+
+3. Fetching posts from r/artificial (last 24 hours) — tool: fetch_reddit_posts
+   - Add error handling and logging using ragbits hooks.
+   - Apply time filtering to include only posts from the past 24 hours.
+   - Extract only the relevant fields per post:
+       title, author, created time, url, score, number of comments, and one of:selftext  OR link
+   - Return JSON: {"posts": [...], "count": N}. The "count" is later passed
+     into the Markdown formatter.
+
+4. Summarization — done by the LLM inside the agent's workflow
+   - For each post that contributes real signal (novel research, tool releases,
+     high-engagement discussion), produce a one-sentence summary. Skip
+     low-engagement or duplicate posts.
+   - Optionally tag each with a category: "Research & Papers", "Tools &
+     Products", "Discussion", "News & Industry".
+   - Produce a 2–3 sentence overall summary covering the day's dominant themes.
+   - Prioritize signal over noise; do not restate raw API fields or boilerplate.
+
+5. Markdown output — tool: format_digest_as_markdown
+   - The Markdown output should include:
+      - generation timestamp
+      - covered time window
+      - total number of posts included
+      - a section with per-post summaries
+      - a short overall daily summary
+   - Output structure:
+       # r/artificial Daily Digest — YYYY-MM-DD
+       **Generated:** <timestamp>
+       **Time window:** <start> to <end>
+       **Posts included:** <N>
+       ## Overall Summary
+       <2–3 sentences>
+       ## Posts
+       ### <Category>   (sub-headings if categories were assigned)
+       - **[Title](url)** — one-sentence summary.
+
+
+   - System prompt must explicitly say:
+       • Per-post summary objects and the overall summary go INTO the
+         format_digest_as_markdown tool call, never into the chat response.
+       • After the formatter tool returns, reply with exactly the single
+         word "DONE" — do not repeat the Markdown, the JSON, or the arguments.
+
+
+7. Extracting the Markdown — critical
+   - Per-post summary objects and the overall summary go INTO the format tool call,
+     never into the chat response.
+   - agent.run() returns AgentResult. Do NOT write result.content to the file;
+     the LLM sometimes puts arguments or narration there instead of the tool
+     output.
+   - After the formatter tool returns, reply with exactly the single word "DONE" —
+     do not repeat the Markdown, the JSON, or the arguments.
+
+8. Provide a cron-friendly CLI entry point.

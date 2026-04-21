@@ -34,9 +34,13 @@ Generate immediately after receiving an answer — do not ask follow-up question
 
 `{app_name_snake}` = app-name converted to snake_case (hyphens → underscores).
 
+Add `hooks.py`, an MCP config block, or an A2A server wrapper only when the description calls for them — see "Component Extensions" below.
+
 ## Generate Files
 
 ### pyproject.toml
+
+Pick the ragbits extra(s) based on what's being generated. Plain `"ragbits"` is enough for tool-only agents; A2A and MCP require extras to pull in `fastapi`/`uvicorn`/`a2a-sdk` or `mcp` respectively.
 
 ```toml
 [project]
@@ -44,11 +48,15 @@ name = "{app-name}"
 version = "0.1.0"
 requires-python = ">=3.10"
 dependencies = [
-    "ragbits",
+    "ragbits",             # use "ragbits[a2a]" if exposing an A2A server
+                           # use "ragbits[mcp]" if using MCP tools
+                           # combine as "ragbits[a2a,mcp]" when both apply
 ]
 ```
 
 ### agent.py
+
+Canonical pattern. `Agent.run()` returns an `AgentResult`; the text reply lives on `.content`. Printing the raw return value prints `AgentResult(content='...', metadata={}, ...)` — that's the single most common scaffolding bug, so the template below gets it right once so callers don't have to think about it.
 
 ```python
 import asyncio
@@ -80,10 +88,11 @@ class {Name}Prompt(Prompt[{Name}Input]):
 
 
 async def run_agent(message: str) -> str:
-    """Run the agent with a single message."""
-    llm = LiteLLM(model_name="{model}")
+    """Run the agent with a single message and return its reply."""
+    llm = LiteLLM(model_name="{model}", use_structured_output=True)
     agent = Agent(llm=llm, prompt={Name}Prompt, tools=TOOLS)
-    return await agent.run({Name}Input(message=message))
+    result = await agent.run({Name}Input(message=message))
+    return result.content
 
 
 async def main() -> None:
@@ -98,15 +107,20 @@ async def main() -> None:
             break
         if not user_input:
             continue
-        result = await run_agent(user_input)
-        print(f"\nASSISTANT: {result}\n")
+        reply = await run_agent(user_input)
+        print(f"\nASSISTANT: {reply}\n")
 
 
 if __name__ == "__main__":
     asyncio.run(main())
 ```
 
-Fill `{Name}` with PascalCase agent name. Write a **real** system prompt based on the description — not a placeholder.
+Fill `{Name}` with the PascalCase agent name. Write a **real** system prompt from the description — not a placeholder.
+
+Notes on the template:
+- `Prompt[{Name}Input]` uses a single generic parameter; the output type defaults to `str`. Add a second parameter (e.g. `Prompt[MyInput, MyOutput]`) only when you want structured output (a Pydantic model) — see `references/checklists/new-prompt.md`.
+- `use_structured_output=True` makes function-calling reliable and matches the pattern used throughout the canonical ragbits examples. Omit only when targeting a model that doesn't support it.
+- Beyond `.content`, the `AgentResult` exposes `.tool_calls`, `.metadata`, `.history`, and `.usage` — reach for those when you need observability.
 
 ### tools.py
 
@@ -152,14 +166,14 @@ Include:
 
 ## Component Extensions
 
-If the description (or user message) mentions any of the following, read the corresponding checklist and add the component **without asking**:
+If the description (or user message) mentions any of the following, read the corresponding checklist and add the component **without asking**. Also bump the `pyproject.toml` dependency when the component requires an extra.
 
-| User mentions | Read | What to generate |
-|---------------|------|-----------------|
-| hooks / logging / guardrails / confirmation / audit | `references/checklists/new-hook.md` | `hooks.py` + update Agent constructor |
-| MCP / model context protocol / external tool server | `references/checklists/new-mcp.md` | MCP server config in agent.py |
-| A2A / serve / expose as server / other agents call it | `references/checklists/new-a2a.md` | A2A server wrapper in agent.py |
-| orchestrate / coordinate / remote agents / multi-agent | `references/checklists/new-a2a.md` | Remote agent discovery + `execute_agent` tool |
+| User mentions | Read | What to generate | Dependency |
+|---------------|------|------------------|-----------|
+| hooks / logging / guardrails / confirmation / audit | `references/checklists/new-hook.md` | `hooks.py` + update Agent constructor | `ragbits` |
+| MCP / model context protocol / external tool server | `references/checklists/new-mcp.md` | MCP server config in agent.py | `ragbits[mcp]` |
+| A2A / serve / expose as server / other agents call it | `references/checklists/new-a2a.md` | A2A server wrapper in agent.py | `ragbits[a2a]` |
+| orchestrate / coordinate / remote agents / multi-agent | `references/checklists/new-a2a.md` | Orchestrator with remote agent discovery | `ragbits[a2a]` |
 
 For advanced patterns (streaming, structured output, conversation history, tool context injection), see `references/agent-spec.md`.
 
@@ -175,6 +189,12 @@ find . -maxdepth 6 -name "ragbits-core" -type d 2>/dev/null | head -1
 ```bash
 pip install -e {path_to_repo}/packages/ragbits-core \
             -e {path_to_repo}/packages/ragbits-agents
+```
+
+If the generated project uses A2A or MCP, also install the matching extras — they pull in `fastapi`/`uvicorn`/`a2a-sdk` or `mcp`:
+```bash
+pip install -e "{path_to_repo}/packages/ragbits-agents[a2a]"
+pip install -e "{path_to_repo}/packages/ragbits-agents[mcp]"
 ```
 
 **Otherwise:**

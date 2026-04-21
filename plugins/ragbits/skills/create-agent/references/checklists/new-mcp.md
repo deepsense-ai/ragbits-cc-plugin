@@ -2,6 +2,18 @@
 
 Quality gates for integrating MCP (Model Context Protocol) servers with a ragbits agent.
 
+## Dependency
+
+MCP support needs the `mcp` extra:
+
+```bash
+pip install "ragbits[mcp]"
+# or, when depending on ragbits-agents directly:
+pip install "ragbits-agents[mcp]"
+```
+
+Add the matching extra to `pyproject.toml` — e.g. `"ragbits[mcp]"` instead of plain `"ragbits"`. Combine extras as needed: `"ragbits[a2a,mcp]"`.
+
 ## Definition Requirements
 
 - [ ] MCP server type is chosen: `MCPServerStdio` (subprocess), `MCPServerSse` (HTTP/SSE), or `MCPServerStreamableHttp` (bidirectional HTTP)

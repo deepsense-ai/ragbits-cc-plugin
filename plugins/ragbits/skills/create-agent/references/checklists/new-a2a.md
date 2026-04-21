@@ -2,6 +2,18 @@
 
 Quality gates for exposing a ragbits agent as an A2A (Agent-to-Agent) server.
 
+## Dependency
+
+A2A support needs the `a2a` extra, which pulls in `fastapi`, `uvicorn`, and `a2a-sdk`:
+
+```bash
+pip install "ragbits[a2a]"
+# or, when depending on ragbits-agents directly:
+pip install "ragbits-agents[a2a]"
+```
+
+Add the matching extra to `pyproject.toml` — e.g. `"ragbits[a2a]"` instead of plain `"ragbits"`.
+
 ## Definition Requirements
 
 - [ ] Agent has a Pydantic `BaseModel` input schema (used to validate incoming A2A requests)

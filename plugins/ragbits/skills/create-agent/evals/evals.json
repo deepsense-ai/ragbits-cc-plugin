@@ -1,0 +1,117 @@
+{
+  "skill_name": "ragbits:create-agent",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Create a ragbits agent called python-tutor that helps users learn Python programming by answering questions and providing code examples",
+      "expected_output": "A python-tutor/ directory with pyproject.toml, README.md, python_tutor/__init__.py, python_tutor/agent.py (Agent + Prompt + LiteLLM + tools import + interactive main), and python_tutor/tools.py (TOOLS list). System prompt is specific to Python tutoring. Dependencies installed.",
+      "files": [],
+      "assertions": [
+        {
+          "name": "project_directory_created",
+          "description": "python-tutor/ directory exists"
+        },
+        {
+          "name": "agent_file_exists",
+          "description": "python_tutor/agent.py exists and contains Agent, LiteLLM, and Prompt imports"
+        },
+        {
+          "name": "tools_file_exists",
+          "description": "python_tutor/tools.py exists and contains a TOOLS list"
+        },
+        {
+          "name": "init_file_exists",
+          "description": "python_tutor/__init__.py exists (makes it a valid package)"
+        },
+        {
+          "name": "pyproject_has_ragbits",
+          "description": "pyproject.toml exists and lists ragbits as a dependency"
+        },
+        {
+          "name": "system_prompt_is_domain_specific",
+          "description": "The system_prompt in agent.py is specific to Python tutoring — not a generic placeholder"
+        },
+        {
+          "name": "readme_exists",
+          "description": "README.md exists with run instructions"
+        },
+        {
+          "name": "unwraps_agent_result_content",
+          "description": "agent.py reads result.content from the AgentResult — does not return or print the AgentResult object directly"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Create a ragbits agent called data-analyst that can read CSV files, compute basic statistics (mean, median, std), and return a summary report",
+      "expected_output": "A data-analyst/ directory scaffolded as above. tools.py contains tool functions related to CSV reading and stats computation. System prompt is specific to data analysis. Dependencies installed.",
+      "files": [],
+      "assertions": [
+        {
+          "name": "project_directory_created",
+          "description": "data-analyst/ directory exists"
+        },
+        {
+          "name": "agent_file_exists",
+          "description": "data_analyst/agent.py exists"
+        },
+        {
+          "name": "tools_reflect_domain",
+          "description": "tools.py contains at least one tool function related to CSV, data, statistics, or file reading (not just example_tool unchanged)"
+        },
+        {
+          "name": "system_prompt_is_domain_specific",
+          "description": "The system_prompt references data analysis, CSV, statistics, or reporting"
+        },
+        {
+          "name": "pyproject_has_ragbits",
+          "description": "pyproject.toml lists ragbits as a dependency"
+        },
+        {
+          "name": "readme_exists",
+          "description": "README.md exists"
+        },
+        {
+          "name": "unwraps_agent_result_content",
+          "description": "agent.py reads result.content from the AgentResult — does not return or print the AgentResult object directly"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Create a ragbits orchestrator agent called coordinator that discovers and coordinates remote agents via A2A protocol. It should look for agents at localhost:8000 and localhost:8001",
+      "expected_output": "A coordinator/ directory. agent.py includes A2A agent discovery, an execute_agent tool, and an orchestrator prompt. pyproject.toml depends on ragbits[a2a]. Dependencies installed.",
+      "files": [],
+      "assertions": [
+        {
+          "name": "project_directory_created",
+          "description": "coordinator/ directory exists"
+        },
+        {
+          "name": "agent_file_exists",
+          "description": "coordinator/agent.py exists"
+        },
+        {
+          "name": "a2a_dependency_extra",
+          "description": "pyproject.toml depends on ragbits[a2a] specifically (not just ragbits) — the a2a extra is required for fastapi/uvicorn/a2a-sdk"
+        },
+        {
+          "name": "execute_agent_tool_present",
+          "description": "agent.py or tools.py contains an execute_agent function or similar remote-agent-calling tool"
+        },
+        {
+          "name": "agent_discovery_present",
+          "description": "Code includes endpoint configuration for localhost:8000 and localhost:8001, or dynamic agent discovery"
+        },
+        {
+          "name": "system_prompt_is_orchestrator",
+          "description": "System prompt describes an orchestrator/coordinator role, not a generic assistant"
+        },
+        {
+          "name": "correct_a2a_imports",
+          "description": "If A2A server code is present, imports are from ragbits.agents.a2a.server (create_agent_server) and get_agent_card is called as an Agent method — not imported as a free function"
+        }
+      ]
+    }
+  ]
+}

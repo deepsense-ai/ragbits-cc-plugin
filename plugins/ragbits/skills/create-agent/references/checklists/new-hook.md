@@ -103,8 +103,7 @@ Validates tool arguments before execution and sanitizes inputs to enforce busine
 
 import re
 
-from ragbits.agents.hooks import EventType, Hook
-from ragbits.core.llms.base import ToolCall
+from ragbits.agents import EventType, Hook, ToolCall
 
 
 async def validate_arguments(tool_call: ToolCall) -> ToolCall:
@@ -232,10 +231,8 @@ import json
 import logging
 from typing import Any
 
-from ragbits.agents._main import AgentOptions, AgentResult, AgentRunContext
-from ragbits.agents.hooks import EventType, Hook
+from ragbits.agents import AgentOptions, AgentResult, AgentRunContext, EventType, Hook, ToolCall
 from ragbits.agents.tool import ToolReturn
-from ragbits.core.llms.base import ToolCall
 
 logger = logging.getLogger(__name__)
 
@@ -371,8 +368,7 @@ Agent hooks: input guardrails.
 Blocks or rewrites agent input based on content policies before the agent processes it.
 """
 
-from ragbits.agents._main import AgentOptions, AgentRunContext
-from ragbits.agents.hooks import EventType, Hook
+from ragbits.agents import AgentOptions, AgentRunContext, EventType, Hook
 
 
 BLOCKED_TOPICS: list[str] = [
@@ -519,8 +515,8 @@ Agent hooks: streaming event transforms.
 Transforms streaming output in real-time as the agent generates responses.
 """
 
-from ragbits.agents.hooks import EventType, Hook
-from ragbits.agents.hooks.types import OnEventCallback, StreamingEvent
+from ragbits.agents import EventType, Hook
+from ragbits.agents.hooks import OnEventCallback, StreamingEvent
 
 
 def create_word_replace_hook(replacements: dict[str, str]) -> OnEventCallback:
@@ -658,11 +654,9 @@ Each event type has an example callback you can customize.
 
 from typing import Any
 
-from ragbits.agents._main import AgentOptions, AgentResult, AgentRunContext
-from ragbits.agents.hooks import EventType, Hook
-from ragbits.agents.hooks.types import StreamingEvent
+from ragbits.agents import AgentOptions, AgentResult, AgentRunContext, EventType, Hook, ToolCall
+from ragbits.agents.hooks import StreamingEvent
 from ragbits.agents.tool import ToolReturn
-from ragbits.core.llms.base import ToolCall
 
 
 # --- PRE_TOOL: Runs before a tool is invoked ---

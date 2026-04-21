@@ -15,15 +15,14 @@ Quality gates for adding a new tool to a ragbits agent.
 # No special imports needed for basic tools — just standard library or project deps.
 # The Agent converts plain functions to Tool objects automatically.
 
-# Optional: for tools that need agent context
+# Optional: for tools that need agent context (run_id, deps, downstream agents)
 from ragbits.agents import AgentRunContext
 
-# Optional: for streaming tools that yield partial results
-from ragbits.agents.tool import ToolEvent
-
-# Optional: for returning metadata hidden from the LLM
-from ragbits.agents.tool import ToolReturn
+# Optional: for streaming tools and tools with hidden metadata
+from ragbits.agents.tool import ToolEvent, ToolReturn
 ```
+
+`ToolReturn` is a dataclass — both `ToolReturn(value)` (positional) and `ToolReturn(value=..., metadata=...)` work.
 
 ## Tool Function Pattern
 
