@@ -1,0 +1,149 @@
+{
+  "skill_name": "ragbits:create-rag",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Create a ragbits RAG application called policy-qa over HR policy documents. CLI only — no web UI.",
+      "expected_output": "A policy-qa/ directory with pyproject.toml (ragbits-core + ragbits-document-search), README.md, documents/sample.md, policy_qa/__init__.py, policy_qa/ingest.py (LiteLLMEmbedder + InMemoryVectorStore + DocumentSearch + cached factory with auto-ingest), and policy_qa/search.py (CLI loop that calls get_document_search(), retrieves context, and asks LiteLLM for an answer). Domain-specific system prompt. Dependencies installed.",
+      "files": [],
+      "assertions": [
+        {
+          "name": "project_directory_created",
+          "description": "policy-qa/ directory exists"
+        },
+        {
+          "name": "ingest_file_exists",
+          "description": "policy_qa/ingest.py exists and imports LiteLLMEmbedder, DocumentSearch, DocumentMeta, and InMemoryVectorStore"
+        },
+        {
+          "name": "search_file_exists",
+          "description": "policy_qa/search.py exists, imports get_document_search from policy_qa.ingest, and calls LiteLLM.generate with a grounded system prompt"
+        },
+        {
+          "name": "no_app_file",
+          "description": "policy_qa/app.py does NOT exist (chat-ui was not requested)"
+        },
+        {
+          "name": "init_file_exists",
+          "description": "policy_qa/__init__.py exists so the directory is a valid package"
+        },
+        {
+          "name": "sample_document_present",
+          "description": "documents/sample.md exists so the app can ingest something on first run"
+        },
+        {
+          "name": "pyproject_has_core_and_doc_search",
+          "description": "pyproject.toml lists ragbits-core AND ragbits-document-search as dependencies"
+        },
+        {
+          "name": "in_memory_factory_caches_and_autoingests",
+          "description": "ingest.py has a module-level _document_search cache and auto-ingests from DOCUMENTS_DIR on first call (the in-memory ephemerality fix)"
+        },
+        {
+          "name": "system_prompt_is_domain_specific",
+          "description": "The SYSTEM_PROMPT references HR, policy, or an equivalent domain — not a generic placeholder"
+        },
+        {
+          "name": "readme_exists",
+          "description": "README.md exists with install, ingest, and run instructions"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Build a ragbits knowledge base called docs-bot with a web chat UI, persistent Chroma vector store, and an LLM reranker to improve retrieval quality.",
+      "expected_output": "A docs-bot/ directory. pyproject.toml depends on ragbits-core[chroma], ragbits-document-search, and ragbits-chat. ingest.py uses ChromaVectorStore (no in-memory cache, no auto-ingest) and wires a LiteLLMReranker into DocumentSearch. app.py subclasses ChatInterface, implements chat() that awaits get_document_search(), yields references, and streams the LLM response. Main block launches RagbitsAPI(RAGChat).run().",
+      "files": [],
+      "assertions": [
+        {
+          "name": "project_directory_created",
+          "description": "docs-bot/ directory exists"
+        },
+        {
+          "name": "chroma_extra_declared",
+          "description": "pyproject.toml depends on ragbits-core[chroma] (with the chroma extra), not plain ragbits-core"
+        },
+        {
+          "name": "chat_package_declared",
+          "description": "pyproject.toml lists ragbits-chat"
+        },
+        {
+          "name": "app_file_exists",
+          "description": "docs_bot/app.py exists, subclasses ChatInterface, and defines an async chat() method"
+        },
+        {
+          "name": "no_search_file",
+          "description": "docs_bot/search.py does NOT exist (chat-ui supersedes the CLI loop)"
+        },
+        {
+          "name": "reranker_wired_in",
+          "description": "ingest.py imports LiteLLMReranker from ragbits.document_search.retrieval.rerankers.litellm and passes reranker=... to DocumentSearch"
+        },
+        {
+          "name": "chroma_vector_store_used",
+          "description": "ingest.py imports ChromaVectorStore and constructs it with chromadb.PersistentClient (no in-memory fallback)"
+        },
+        {
+          "name": "chat_yields_references",
+          "description": "chat() calls self.create_reference(...) for retrieved elements before streaming the answer"
+        },
+        {
+          "name": "chat_streams_response",
+          "description": "chat() uses llm.generate_streaming and yields self.create_text_response(chunk) in a loop"
+        },
+        {
+          "name": "main_block_launches_ragbitsapi",
+          "description": "The __main__ block imports RagbitsAPI and calls RagbitsAPI(RAGChat).run()"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Create a ragbits RAG app called support-kb with a chat UI, login required, like/dislike feedback forms, branded header with a domain-appropriate logo, and a Qdrant vector store.",
+      "expected_output": "A support-kb/ directory. pyproject.toml uses ragbits-core[qdrant] + ragbits-document-search + ragbits-chat. ingest.py uses QdrantVectorStore with AsyncQdrantClient. app.py defines LikeForm/DislikeForm Pydantic models, a get_auth_backend() factory with ListAuthenticationBackend + InMemorySessionStore, RAGChat with feedback_config, ui_customization (title, subtitle, welcome_message, starter_questions), and a __main__ block that calls RagbitsAPI(RAGChat, auth_backend=get_auth_backend()).run(). README documents the seed credentials.",
+      "files": [],
+      "assertions": [
+        {
+          "name": "project_directory_created",
+          "description": "support-kb/ directory exists"
+        },
+        {
+          "name": "qdrant_extra_declared",
+          "description": "pyproject.toml depends on ragbits-core[qdrant]"
+        },
+        {
+          "name": "qdrant_vector_store_used",
+          "description": "ingest.py imports QdrantVectorStore and AsyncQdrantClient and uses them in get_document_search()"
+        },
+        {
+          "name": "auth_backend_factory_present",
+          "description": "app.py defines get_auth_backend() that returns a ListAuthenticationBackend with an InMemorySessionStore and at least one seed user"
+        },
+        {
+          "name": "feedback_forms_defined",
+          "description": "app.py defines LikeForm and DislikeForm Pydantic models with json_schema_serialization_defaults_required=True"
+        },
+        {
+          "name": "feedback_config_attached",
+          "description": "RAGChat has a feedback_config class attribute referencing LikeForm and DislikeForm"
+        },
+        {
+          "name": "ui_customization_domain_specific",
+          "description": "ui_customization has non-placeholder title, subtitle, welcome_message, and 2+ starter_questions tied to the support-knowledge-base domain"
+        },
+        {
+          "name": "main_block_passes_auth_backend",
+          "description": "__main__ calls RagbitsAPI(RAGChat, auth_backend=get_auth_backend()).run() — not the default single-arg form"
+        },
+        {
+          "name": "readme_documents_credentials",
+          "description": "README lists the seed credentials and flags them as demo-only"
+        },
+        {
+          "name": "chat_yields_references",
+          "description": "chat() yields self.create_reference(...) for retrieved elements and streams the LLM answer"
+        }
+      ]
+    }
+  ]
+}

@@ -1,51 +1,37 @@
 ---
 name: create-rag
-description: Scaffold a new ragbits RAG (Retrieval-Augmented Generation) application. Use when the user wants to create a RAG app, document search, knowledge base, or question-answering system powered by ragbits.
-disable-model-invocation: true
-argument-hint: "[app-name] [--model MODEL] [--embedding-model MODEL] [--vector-store STORE] [--features FEATURES]"
-allowed-tools: Bash(mkdir *) Bash(pip *) Bash(uv *) Write Edit Read Glob Grep
+description: Scaffold a new ragbits RAG (Retrieval-Augmented Generation) application. Triggers whenever the user wants to create, build, or set up a RAG app, document search, knowledge base, question-answering system, or document-grounded chat powered by the ragbits library — including CLI search, web-based chat UIs, persistent vector stores, auth-protected knowledge bases, and reranker/rephraser-enhanced pipelines. Use even for "build a ragbits RAG over my docs", "I need a knowledge base with web UI", or "set up a document Q&A bot".
 ---
 
 # Create a Ragbits RAG Application
 
-Generate a complete, ready-to-run ragbits RAG (Retrieval-Augmented Generation) application with document ingestion, vector search, and LLM-powered question answering.
+Scaffold a complete, immediately runnable ragbits RAG application. Generate the full template first, install dependencies, then let the user customize.
 
-## Arguments
+## Parse Arguments
 
-Parse `$ARGUMENTS` to extract:
-- **app-name** (first positional arg, default: `my-rag`) — the project directory name
-- **--model MODEL** (optional, default: `gpt-4o-mini`) — the LLM model to use via LiteLLM for answer generation
-- **--embedding-model MODEL** (optional, default: `text-embedding-3-small`) — the embedding model for document and query embeddings
-- **--vector-store STORE** (optional, default: `in-memory`) — the vector store backend. Supported: `in-memory`, `chroma`, `qdrant`
-- **--features FEATURES** (optional, comma-separated) — extra features to include. Supported: `chat-ui`, `auth`, `feedback`, `theme`, `reranker`, `rephraser`
+Parse `$ARGUMENTS`:
+- **app-name** (first positional, default: `my-rag`) — project directory name
+- **description** (remaining free-form text, optional) — domain and goals; drives the system prompt and feature inference
+- **--model MODEL** (default: `gpt-4o-mini`) — any LiteLLM-compatible model for answer generation
+- **--embedding-model MODEL** (default: `text-embedding-3-small`) — embedding model for documents and queries
+- **--vector-store STORE** (default: `in-memory`) — one of `in-memory`, `chroma`, `qdrant`
+- **--features FEATURES** (comma-separated, optional) — any of `chat-ui`, `auth`, `feedback`, `theme`, `reranker`, `rephraser`
 
-If `$ARGUMENTS` is empty, ask the user what they want to build before proceeding. Otherwise infer from the description.
+If `$ARGUMENTS` is empty and there is no prior context describing what to build, ask one message:
 
-## Step 1: Gather Requirements
+> "What should the RAG app be called, and what knowledge does it serve? (e.g. `policy-qa A Q&A bot over HR policy PDFs`)"
 
-Based on the arguments and conversation context, determine:
-1. **App name** — used for the directory and module name
-2. **LLM model** — which model for answer generation (default: `gpt-4o-mini`)
-3. **Embedding model** — which model for embeddings (default: `text-embedding-3-small`)
-4. **Vector store** — which backend to use:
-   - `in-memory` — InMemoryVectorStore (simple, no persistence, good for demos)
-   - `chroma` — ChromaVectorStore (persistent, local)
-   - `qdrant` — QdrantVectorStore (persistent, local or server)
-5. **Features** — which capabilities to include:
-   - `chat-ui` — add ragbits chat web UI for interactive Q&A
-   - `auth` — add authentication with test users (requires `chat-ui`)
-   - `feedback` — add like/dislike feedback forms (requires `chat-ui`)
-   - `theme` — add UI customization with HeroUI theme support (requires `chat-ui`)
-   - `reranker` — add LLM-based reranking of search results
-   - `rephraser` — add LLM-based query rephrasing for better retrieval
+Generate immediately after receiving an answer. Map natural-language cues to features without asking follow-ups:
+- "web UI", "chat interface", "chatbot" → `chat-ui`
+- "login", "users", "accounts" → `auth` (implies `chat-ui`)
+- "thumbs up/down", "rating" → `feedback` (implies `chat-ui`)
+- "branded UI", "logo", "customize look" → `theme` (implies `chat-ui`)
+- "better results", "rerank" → `reranker`
+- "query expansion", "rewrite queries" → `rephraser`
 
-If the user described what they want in natural language, map it to the above. For example, "a knowledge base with web interface and login" means features: `chat-ui`, `auth`.
+For deeper domain questions (document formats, access patterns, scale), see `references/interview-checklist.md`.
 
-If any of `auth`, `feedback`, or `theme` is selected, automatically include `chat-ui`.
-
-## Step 2: Create Project Structure
-
-Create the following directory layout:
+## Project Structure
 
 ```
 {app-name}/
@@ -55,18 +41,16 @@ Create the following directory layout:
 │   └── sample.md
 └── {app_name_snake}/
     ├── __init__.py
-    ├── ingest.py
-    └── search.py          (if NOT chat-ui)
-    └── app.py             (if chat-ui)
+    ├── ingest.py        # DocumentSearch factory + CLI ingestion entry point
+    └── search.py        # CLI Q&A loop          (if NOT chat-ui)
+    └── app.py           # ChatInterface + API   (if chat-ui)
 ```
 
-Where `{app_name_snake}` is the app name converted to snake_case (hyphens to underscores).
+`{app_name_snake}` = app-name converted to snake_case (hyphens → underscores). Always write an empty `__init__.py` so the directory is a valid Python package.
 
-**IMPORTANT**: Always create an empty `__init__.py` in the `{app_name_snake}/` directory so it is a valid Python package.
+## Generate Files
 
-## Step 3: Generate pyproject.toml
-
-Use this template:
+### pyproject.toml
 
 ```toml
 [project]
@@ -74,27 +58,23 @@ name = "{app-name}"
 version = "0.1.0"
 requires-python = ">=3.10"
 dependencies = [
-    "ragbits-document-search",
     "ragbits-core",
+    "ragbits-document-search",
 ]
 ```
 
-Add extra dependencies based on configuration:
-- If `chat-ui`: add `"ragbits-chat"`
-- If `chroma` vector store: add `"ragbits-core[chroma]"`
-- If `qdrant` vector store: add `"ragbits-core[qdrant]"`
+Append based on configuration (combine as needed):
+- `chat-ui` feature → add `"ragbits-chat"`
+- `--vector-store chroma` → replace `ragbits-core` with `"ragbits-core[chroma]"`
+- `--vector-store qdrant` → replace `ragbits-core` with `"ragbits-core[qdrant]"`
 
-## Step 4: Create Sample Documents
+### documents/sample.md
 
-Copy the sample document from the plugin's `docs/sample-rag.md` file into the project's `documents/sample.md`.
+Copy `assets/sample.md` (bundled with this skill, located next to `SKILL.md`) into `{app-name}/documents/sample.md`. This gives the user something ingestible on first run.
 
-Use the Read tool to read the file `docs/sample-rag.md` relative to the plugin root (the directory containing this SKILL.md file: `plugins/ragbits/skills/create-rag/`), then write its content to `{app-name}/documents/sample.md`.
+### ingest.py
 
-## Step 5: Generate the Ingestion Script (ingest.py)
-
-This script handles document ingestion into the vector store.
-
-### Imports — always included:
+Canonical pattern. `DocumentSearch` owns ingestion and retrieval; the embedder lives on the vector store. `DocumentMeta.from_local_path()` handles PDF, DOCX, MD, HTML, and the other 20+ formats ragbits parses automatically.
 
 ```python
 import asyncio
@@ -103,145 +83,26 @@ from pathlib import Path
 from ragbits.core.embeddings.dense import LiteLLMEmbedder
 from ragbits.document_search import DocumentSearch
 from ragbits.document_search.documents.document import DocumentMeta
-```
 
-### Vector store imports — based on selection:
+# --- vector store import: pick exactly one block based on --vector-store ---
+{vector_store_imports}
+# --- end vector store import ---
 
-If `in-memory`:
-```python
-from ragbits.core.vector_stores.in_memory import InMemoryVectorStore
-```
-
-If `chroma`:
-```python
-import chromadb
-from ragbits.core.vector_stores.chroma import ChromaVectorStore
-```
-
-If `qdrant`:
-```python
-from qdrant_client import AsyncQdrantClient
-from ragbits.core.vector_stores.qdrant import QdrantVectorStore
-```
-
-### Build the ingest script:
-
-```python
 DOCUMENTS_DIR = Path(__file__).parent.parent / "documents"
-```
-
-**IMPORTANT — in-memory singleton pattern**: Because `InMemoryVectorStore` is ephemeral (data is lost when the process exits), the `get_document_search()` function must:
-1. Cache the `DocumentSearch` instance in a module-level variable so it is created only once per process.
-2. Automatically ingest all documents from `DOCUMENTS_DIR` on first call, so that `search.py` and `app.py` always have data available without requiring a separate ingest step.
-
-This pattern is **only needed for `in-memory`**. For persistent stores (`chroma`, `qdrant`), caching is optional and auto-ingest is not needed.
-
-If `in-memory`:
-```python
-_document_search: DocumentSearch | None = None
 
 
-async def get_document_search() -> DocumentSearch:
-    """Return a cached DocumentSearch instance, auto-ingesting documents on first call."""
-    global _document_search
-    if _document_search is not None:
-        return _document_search
-
-    embedder = LiteLLMEmbedder(model_name="{embedding_model}")
-    vector_store = InMemoryVectorStore(embedder=embedder)
-```
-
-If `chroma`:
-```python
-async def get_document_search() -> DocumentSearch:
-    """Create and return a configured DocumentSearch instance."""
-    embedder = LiteLLMEmbedder(model_name="{embedding_model}")
-    chroma_client = chromadb.PersistentClient(path=".chroma_data")
-    vector_store = ChromaVectorStore(
-        client=chroma_client,
-        index_name="{app_name_snake}",
-        embedder=embedder,
-    )
-```
-
-If `qdrant`:
-```python
-async def get_document_search() -> DocumentSearch:
-    """Create and return a configured DocumentSearch instance."""
-    embedder = LiteLLMEmbedder(model_name="{embedding_model}")
-    qdrant_client = AsyncQdrantClient(path=".qdrant_data")
-    vector_store = QdrantVectorStore(
-        client=qdrant_client,
-        index_name="{app_name_snake}",
-        embedder=embedder,
-    )
-```
-
-Continue building DocumentSearch with optional components:
-
-If `reranker`:
-```python
-    from ragbits.core.llms import LiteLLM
-    from ragbits.document_search.retrieval.rerankers.litellm import LiteLLMReranker
-
-    llm = LiteLLM(model_name="{model}")
-    reranker = LiteLLMReranker(model="{model}")
-```
-
-If `rephraser`:
-```python
-    from ragbits.core.llms import LiteLLM
-    from ragbits.document_search.retrieval.rephrasers.llm import LLMQueryRephraser
-
-    llm = LiteLLM(model_name="{model}")
-    rephraser = LLMQueryRephraser(llm=llm)
-```
-
-Assemble DocumentSearch:
-```python
-    document_search = DocumentSearch(
-        vector_store=vector_store,
-```
-
-Add optional kwargs:
-- If `reranker`: add `reranker=reranker,`
-- If `rephraser`: add `query_rephraser=rephraser,`
-
-```python
-    )
-```
-
-If `in-memory` — auto-ingest and cache before returning:
-```python
-    # Auto-ingest documents so the in-memory store is pre-populated
-    documents = [
-        DocumentMeta.from_local_path(file_path)
-        for file_path in DOCUMENTS_DIR.iterdir()
-        if file_path.is_file()
-    ]
-    if documents:
-        await document_search.ingest(documents)
-
-    _document_search = document_search
-    return document_search
-```
-
-If `chroma` or `qdrant` — just return:
-```python
-    return document_search
-```
+{get_document_search_definition}
 
 
-```python
 async def ingest_documents() -> None:
-    """Ingest all documents from the documents directory."""
+    """Ingest all files from the documents/ directory."""
     document_search = await get_document_search()
 
-    documents = []
-    for file_path in DOCUMENTS_DIR.iterdir():
-        if file_path.is_file():
-            documents.append(DocumentMeta.from_local_path(file_path))
-
+    documents = [
+        DocumentMeta.from_local_path(p)
+        for p in DOCUMENTS_DIR.iterdir()
+        if p.is_file()
+    ]
     if not documents:
         print("No documents found in the documents/ directory.")
         return
@@ -257,16 +118,21 @@ if __name__ == "__main__":
     asyncio.run(ingest_documents())
 ```
 
-## Step 6A: Generate Search Script (search.py) — if NOT chat-ui
+See `references/checklists/new-vector-store.md` for the exact `get_document_search()` body per backend. The key detail: `InMemoryVectorStore` is ephemeral, so the in-memory variant must cache the `DocumentSearch` in a module-level variable and auto-ingest on first call — otherwise `search.py`/`app.py` would start empty every time. Persistent stores (`chroma`, `qdrant`) skip both the cache and the auto-ingest.
 
-This is a CLI-based search interface for querying ingested documents.
+If the user selected `--features reranker` or `--features rephraser`, wire those into the DocumentSearch constructor following `references/checklists/new-reranker.md` or `references/checklists/new-rephraser.md`.
+
+### search.py — when NOT chat-ui
+
+CLI loop that retrieves relevant chunks and asks the LLM to answer grounded in them.
 
 ```python
 import asyncio
 
-from {app_name_snake}.ingest import get_document_search
 from ragbits.core.llms import LiteLLM
 from ragbits.core.prompt.base import ChatFormat
+
+from {app_name_snake}.ingest import get_document_search
 
 
 SYSTEM_PROMPT = (
@@ -278,37 +144,30 @@ SYSTEM_PROMPT = (
 
 
 async def search_and_answer(query: str) -> str:
-    """Search documents and generate an answer using RAG."""
     document_search = await get_document_search()
     llm = LiteLLM(model_name="{model}")
 
-    # Retrieve relevant documents
     results = await document_search.search(query)
-
     if not results:
         return "No relevant documents found for your query."
 
-    # Build context from search results
     context = "\n\n---\n\n".join(
         element.text_representation
         for element in results
         if element.text_representation
     )
 
-    # Generate answer with LLM
     messages: ChatFormat = [
         {"role": "system", "content": SYSTEM_PROMPT.format(context=context)},
         {"role": "user", "content": query},
     ]
-
-    response = await llm.generate(messages)
-    return response
+    return await llm.generate(messages)
 
 
 async def main() -> None:
-    """Interactive search loop."""
-    print("RAG Search Application")
-    print("Type your questions below. Type 'quit' to exit.\n")
+    print("{App Name}")
+    print("=" * 40)
+    print("Type 'quit' to exit.\n")
 
     while True:
         query = input("Question: ").strip()
@@ -316,7 +175,6 @@ async def main() -> None:
             break
         if not query:
             continue
-
         print("\nSearching...")
         answer = await search_and_answer(query)
         print(f"\nAnswer: {answer}\n")
@@ -326,349 +184,98 @@ if __name__ == "__main__":
     asyncio.run(main())
 ```
 
-## Step 6B: Generate Chat Application (app.py) — if chat-ui
+Fill `{App Name}` with a user-facing title derived from the description. Write the `SYSTEM_PROMPT` so it reflects the actual domain when the description is specific — the generic template is a starting point, not a destination.
 
-Build a web-based RAG chat interface using ragbits ChatInterface.
+### app.py — when chat-ui
 
-### Imports — always included for chat-ui:
+Build on `ChatInterface` with streaming answers, yielded references, and conversation history. The full reference is `references/checklists/new-chat-ui.md`; it also documents how to layer on `auth`, `feedback`, and `theme` when those features are requested.
 
-```python
-from collections.abc import AsyncGenerator
+### README.md
 
-from ragbits.chat.interface import ChatInterface
-from ragbits.chat.interface.types import ChatContext, ChatResponse
-from ragbits.core.llms import LiteLLM
-from ragbits.core.prompt.base import ChatFormat
+Include:
+- What the RAG app does (from the description)
+- Prerequisites (`OPENAI_API_KEY`, or the env var for the chosen model / embedding model)
+- Install: `pip install -e .`
+- Place documents in `documents/` (PDF, DOCX, MD, TXT, HTML, etc.)
+- Ingest: `python -m {app_name_snake}.ingest` (persistent stores only — in-memory auto-ingests)
+- Run:
+  - NOT chat-ui: `python -m {app_name_snake}.search`
+  - chat-ui: `ragbits api run {app_name_snake}.app:RAGChat` (preferred) **or** `python -m {app_name_snake}.app`
+  - With `auth`: include test credentials and note the `--auth` flag
+- Vector store info, enabled features, how to swap backends
+- Pointers to the reference files for adding rerankers/rephrasers/customization
 
-from {app_name_snake}.ingest import get_document_search
-```
+Always use **dots** in Python module paths (`my_rag.app`), not slashes. Slashes appear only when invoking a script file directly (`python path/to/app.py`).
 
-### If `feedback` feature is enabled, add:
+## Component Extensions
 
-```python
-from typing import Literal
-from pydantic import BaseModel, ConfigDict, Field
-from ragbits.chat.interface.forms import FeedbackConfig, UserSettings
-```
+Read the relevant checklist when the description or feature flag calls for it. Generate the component without asking follow-up questions.
 
-And create Pydantic form models:
+| User mentions / flag               | Read                                             | What to add                                      | Dependency                |
+|------------------------------------|--------------------------------------------------|--------------------------------------------------|---------------------------|
+| vector store selection             | `references/checklists/new-vector-store.md`     | `get_document_search()` body + imports           | `ragbits-core[chroma\|qdrant]` as needed |
+| `chat-ui` feature                  | `references/checklists/new-chat-ui.md`          | `app.py` with `ChatInterface` + `RagbitsAPI`     | `ragbits-chat`            |
+| `auth` feature                     | `references/checklists/new-auth.md`             | `ListAuthenticationBackend` factory in `app.py`  | `ragbits-chat`            |
+| `feedback` feature                 | `references/checklists/new-feedback.md`         | Pydantic forms + `FeedbackConfig`                | `ragbits-chat`            |
+| `theme` feature                    | `references/checklists/new-theme.md`            | `UICustomization` block                          | `ragbits-chat`            |
+| `reranker` feature                 | `references/checklists/new-reranker.md`         | `LiteLLMReranker` wired into `DocumentSearch`    | `ragbits-document-search` |
+| `rephraser` feature                | `references/checklists/new-rephraser.md`        | `LLMQueryRephraser` wired into `DocumentSearch`  | `ragbits-document-search` |
 
-```python
-class LikeForm(BaseModel):
-    model_config = ConfigDict(title="Like Form", json_schema_serialization_defaults_required=True)
-    reason: str = Field(description="Why do you like this?", min_length=1)
+For advanced patterns (custom parsers, `DocumentSearchOptions`, hybrid search, multimodal, external parser providers) see `references/rag-spec.md`.
 
+## Install Dependencies
 
-class DislikeForm(BaseModel):
-    model_config = ConfigDict(title="Dislike Form", json_schema_serialization_defaults_required=True)
-    issue_type: Literal["Incorrect information", "Not helpful", "Unclear", "Other"] = Field(
-        description="What was the issue?"
-    )
-    feedback: str = Field(description="Please provide more details", min_length=1)
-```
-
-### If `auth` feature is enabled, add:
-
-```python
-from ragbits.chat.auth import ListAuthenticationBackend
-from ragbits.chat.auth.session_store import InMemorySessionStore
-```
-
-And create an auth backend factory:
-
-```python
-def get_auth_backend() -> ListAuthenticationBackend:
-    users = [
-        {
-            "user_id": "1",
-            "username": "admin",
-            "password": "admin123",
-            "email": "admin@example.com",
-            "full_name": "Admin User",
-            "roles": ["admin"],
-        },
-        {
-            "user_id": "2",
-            "username": "user",
-            "password": "user123",
-            "email": "user@example.com",
-            "full_name": "Regular User",
-            "roles": ["user"],
-        },
-    ]
-    return ListAuthenticationBackend(users, session_store=InMemorySessionStore())
-```
-
-### If `theme` feature is enabled, add:
-
-```python
-from ragbits.chat.interface.ui_customization import (
-    HeaderCustomization,
-    PageMetaCustomization,
-    UICustomization,
-)
-```
-
-### ChatInterface class
-
-```python
-SYSTEM_PROMPT = (
-    "You are a helpful assistant that answers questions based on the provided context. "
-    "Use the context below to answer the user's question. "
-    "If the context doesn't contain relevant information, say so.\n\n"
-    "Context:\n{context}"
-)
-
-
-class RAGChat(ChatInterface):
-    """Ragbits RAG chat application with document search."""
-
-    conversation_history = True
-```
-
-If `theme` feature:
-```python
-    ui_customization = UICustomization(
-        header=HeaderCustomization(
-            title="{App Name}",
-            subtitle="RAG-powered Q&A",
-            logo="📚",
-        ),
-        welcome_message="Hello! Ask me anything about the ingested documents.",
-        starter_questions=[
-            "What are the key features?",
-            "How does this work?",
-            "Summarize the main topics",
-        ],
-        meta=PageMetaCustomization(favicon="📚", page_title="{App Name}"),
-    )
-```
-
-If `feedback` feature:
-```python
-    feedback_config = FeedbackConfig(
-        like_enabled=True,
-        like_form=LikeForm,
-        dislike_enabled=True,
-        dislike_form=DislikeForm,
-    )
-```
-
-Constructor:
-```python
-    def __init__(self) -> None:
-        self.llm = LiteLLM(model_name="{model}")
-```
-
-Chat method with RAG:
-```python
-    async def chat(
-        self,
-        message: str,
-        history: ChatFormat,
-        context: ChatContext,
-    ) -> AsyncGenerator[ChatResponse, None]:
-        # Retrieve relevant documents
-        document_search = await get_document_search()
-        results = await document_search.search(message)
-
-        # Build context from search results
-        rag_context = "\n\n---\n\n".join(
-            element.text_representation
-            for element in results
-            if element.text_representation
-        )
-
-        # Yield references for each retrieved document
-        for element in results:
-            if element.text_representation:
-                source = "Document"
-                if element.document_meta and element.document_meta.source:
-                    source = str(element.document_meta.source)
-                yield self.create_reference(
-                    title=source,
-                    content=element.text_representation[:200] + "..." if len(element.text_representation) > 200 else element.text_representation,
-                )
-
-        # Generate answer with context
-        messages: ChatFormat = [
-            {"role": "system", "content": SYSTEM_PROMPT.format(context=rag_context)},
-            *history,
-            {"role": "user", "content": message},
-        ]
-
-        streaming_result = self.llm.generate_streaming(messages)
-        async for chunk in streaming_result:
-            yield self.create_text_response(chunk)
-```
-
-### Main block
-
-If `auth` feature:
-```python
-if __name__ == "__main__":
-    from ragbits.chat.api import RagbitsAPI
-
-    RagbitsAPI(RAGChat, auth_backend=get_auth_backend()).run()
-```
-
-Otherwise:
-```python
-if __name__ == "__main__":
-    from ragbits.chat.api import RagbitsAPI
-
-    RagbitsAPI(RAGChat).run()
-```
-
-## Step 7: Generate README.md
-
-Create a README with:
-- App name and description
-- Prerequisites (API keys needed, e.g., `OPENAI_API_KEY`)
-- How to install dependencies: `pip install -e .` or `uv pip install -e .`
-- How to ingest documents:
-  1. Place documents (PDF, DOCX, MD, TXT, HTML, etc.) in the `documents/` directory
-  2. Run `python {app_name_snake}/ingest.py`
-- How to search/run the app:
-  - If NOT `chat-ui`: `python {app_name_snake}/search.py`
-  - If `chat-ui`: list ALL three methods:
-    1. `ragbits api run {app_name_snake}.app:RAGChat` (recommended, via ragbits CLI)
-    2. `python -m {app_name_snake}.app` (note: use dots, NOT slashes)
-    3. `python {app_name_snake}/app.py` (direct script execution)
-  - If `auth`: include the `--auth` flag and test credentials
-- Vector store info (selected backend and any setup needed)
-- List of enabled features
-- How to add more documents (place in `documents/` and re-run ingest)
-
-**IMPORTANT**: In all commands and documentation, use **dots** for Python module paths (e.g. `my_rag.app`), never slashes. Slashes are only for filesystem paths when running a script directly with `python path/to/app.py`.
-
-## Step 8: Install Dependencies
-
-**CRITICAL**: After generating all files, you MUST install the project dependencies before the app can run.
-
-### Detect local ragbits development
-
-First, check if a `packages/` directory exists in the ragbits repo root (parent or ancestor of the current working directory). Look for a path like `{some_ancestor}/packages/ragbits-core/`.
-
-**If local ragbits packages are found** (i.e. developing ragbits from source), install from local paths to avoid version conflicts with PyPI:
+After generating all files, detect if working inside a local ragbits source repo:
 
 ```bash
-pip install -e {path_to_ragbits_repo}/packages/ragbits-core \
-            -e {path_to_ragbits_repo}/packages/ragbits-document-search
+find . -maxdepth 6 -name "ragbits-core" -type d 2>/dev/null | head -1
 ```
 
-Add additional local packages based on features:
-- If `chat-ui`: also add `-e {path_to_ragbits_repo}/packages/ragbits-chat`
-- If `chroma` vector store: also add `-e "{path_to_ragbits_repo}/packages/ragbits-core[chroma]"`
-- If `qdrant` vector store: also add `-e "{path_to_ragbits_repo}/packages/ragbits-core[qdrant]"`
-
-**If NOT in a local ragbits repo** (normal user), install from PyPI:
-
+**If found (developing ragbits from source):**
 ```bash
-cd {app-name}
-pip install -e .
+pip install -e {path_to_repo}/packages/ragbits-core \
+            -e {path_to_repo}/packages/ragbits-document-search
 ```
 
-Wait for the installation to complete and verify there are no errors. If installation fails, help the user troubleshoot.
+Add matching local packages per feature:
+- `chat-ui` → also `-e {path_to_repo}/packages/ragbits-chat`
+- `--vector-store chroma` → `-e "{path_to_repo}/packages/ragbits-core[chroma]"`
+- `--vector-store qdrant` → `-e "{path_to_repo}/packages/ragbits-core[qdrant]"`
 
-## Step 9: Summary
-
-After creating all files AND installing dependencies, print a summary:
-
-If NOT `chat-ui` and `in-memory` vector store:
+**Otherwise:**
+```bash
+cd {app-name} && pip install -e .
 ```
-Created ragbits RAG application: {app-name}/
-  - {app_name_snake}/__init__.py (package marker)
-  - {app_name_snake}/ingest.py (document ingestion)
-  - {app_name_snake}/search.py (search & Q&A)
-  - documents/sample.md (sample document)
-  - pyproject.toml (dependencies)
-  - README.md (documentation)
 
-Dependencies installed successfully.
+Wait for installation to complete. If it fails, show the error and suggest a fix.
 
-To get started:
-  1. Set your API key: export OPENAI_API_KEY=your-key
-  2. Add documents to the documents/ directory
-  3. Search: python {app_name_snake}/search.py
+## Summary
 
-Note: With in-memory vector store, documents are automatically ingested on each run.
-To use a persistent store, re-run with --vector-store chroma or --vector-store qdrant.
+After files are generated and dependencies are installed, print a summary matching the selected shape:
+
+```
+Created {app-name}/
+  {app_name_snake}/ingest.py   — DocumentSearch factory + ingestion CLI
+  {app_name_snake}/{search.py|app.py}   — {CLI Q&A loop | chat UI}
+  documents/sample.md          — sample document (replace with yours)
+  pyproject.toml               — project + dependencies
+  README.md                    — setup, run, customization
 
 Vector store: {selected store}
-Features: {list of enabled features}
+Features:     {list of enabled features, or "none"}
+
+Run:
+  cd {app-name}
+  {if persistent store} python -m {app_name_snake}.ingest
+  {CLI:}     python -m {app_name_snake}.search
+  {chat-ui:} ragbits api run {app_name_snake}.app:RAGChat
+
+Next steps:
+  • Drop PDFs/DOCX/MD into documents/ and re-ingest
+  • Tune the system prompt in {search.py|app.py} for your domain
+  • Add a reranker: see references/checklists/new-reranker.md
+  • Add a query rephraser: see references/checklists/new-rephraser.md
+  • Customize the chat UI: see references/checklists/new-theme.md
 ```
 
-If NOT `chat-ui` and persistent vector store (`chroma` or `qdrant`):
-```
-Created ragbits RAG application: {app-name}/
-  - {app_name_snake}/__init__.py (package marker)
-  - {app_name_snake}/ingest.py (document ingestion)
-  - {app_name_snake}/search.py (search & Q&A)
-  - documents/sample.md (sample document)
-  - pyproject.toml (dependencies)
-  - README.md (documentation)
-
-Dependencies installed successfully.
-
-To get started:
-  1. Set your API key: export OPENAI_API_KEY=your-key
-  2. Add documents to the documents/ directory
-  3. Ingest documents: python {app_name_snake}/ingest.py
-  4. Search: python {app_name_snake}/search.py
-
-Vector store: {selected store}
-Features: {list of enabled features}
-```
-
-If `chat-ui` and `in-memory` vector store:
-```
-Created ragbits RAG application: {app-name}/
-  - {app_name_snake}/__init__.py (package marker)
-  - {app_name_snake}/ingest.py (document ingestion)
-  - {app_name_snake}/app.py (chat UI application)
-  - documents/sample.md (sample document)
-  - pyproject.toml (dependencies)
-  - README.md (documentation)
-
-Dependencies installed successfully.
-
-To get started:
-  1. Set your API key: export OPENAI_API_KEY=your-key
-  2. Add documents to the documents/ directory
-  3. Run the app: ragbits api run {app_name_snake}.app:RAGChat
-
-Or run directly:
-  python {app_name_snake}/app.py
-
-Note: With in-memory vector store, documents are automatically ingested on each run.
-To use a persistent store, re-run with --vector-store chroma or --vector-store qdrant.
-
-Vector store: {selected store}
-Features: {list of enabled features}
-```
-
-If `chat-ui` and persistent vector store (`chroma` or `qdrant`):
-```
-Created ragbits RAG application: {app-name}/
-  - {app_name_snake}/__init__.py (package marker)
-  - {app_name_snake}/ingest.py (document ingestion)
-  - {app_name_snake}/app.py (chat UI application)
-  - documents/sample.md (sample document)
-  - pyproject.toml (dependencies)
-  - README.md (documentation)
-
-Dependencies installed successfully.
-
-To get started:
-  1. Set your API key: export OPENAI_API_KEY=your-key
-  2. Add documents to the documents/ directory
-  3. Ingest documents: python {app_name_snake}/ingest.py
-  4. Run the app: ragbits api run {app_name_snake}.app:RAGChat
-
-Or run directly:
-  python {app_name_snake}/app.py
-
-Vector store: {selected store}
-Features: {list of enabled features}
-```
+Mention the in-memory auto-ingest caveat when the in-memory store is used, and show the `--auth` login hint when `auth` is enabled.

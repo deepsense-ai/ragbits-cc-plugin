@@ -12,9 +12,9 @@ Skill that scaffolds a new ragbits agent application — complete, immediately r
 
 ## Example: Reddit daily digest agent
 
-This repository includes a full specification you can hand to **ragbits:create-agent** as the agent description (paste the file contents, or attach `@prompts/create-reddit-agent.txt` in Cursor).
+This repository includes a full specification you can hand to **ragbits:create-agent** as the agent description (paste the file contents, or attach `@examples/create-reddit-agent.txt` in Cursor).
 
-The prompt in [`prompts/create-reddit-agent.txt`](../../../../prompts/create-reddit-agent.txt) asks for a **once-per-day** Ragbits agent that:
+The prompt in [`examples/create-reddit-agent.txt`](../../../../examples/create-reddit-agent.txt) asks for a **once-per-day** Ragbits agent that:
 
 - Fetches **r/artificial** posts from the last 24 hours via Reddit’s **public `.json` endpoints only** (no OAuth), using `httpx` with browser-like headers and a priming request so requests are not blocked with HTTP 403.
 - Defines tools such as **`fetch_reddit_posts`** (structured post fields + JSON envelope) and **`format_digest_as_markdown`** (dated digest layout with overall and per-post summaries).

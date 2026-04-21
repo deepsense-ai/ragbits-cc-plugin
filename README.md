@@ -23,6 +23,19 @@ Scaffold a ragbits **chat application** with a conversational web UI.
 - `--model MODEL` — LLM model via LiteLLM (default: `gpt-4o-mini`)
 - `--features` — comma-separated: `auth`, `agents`, `upload`, `feedback`, `theme`, `document-search`
 
+### `/create-agent`
+
+Scaffold a ragbits **agent application** — a tool-using assistant with the canonical `Agent` + `Prompt` + `LiteLLM` pattern. Also handles A2A servers, MCP tool integration, multi-agent orchestrators, and agent hooks (validation, logging, guardrails, confirmation).
+
+```
+/create-agent customer-support A bot that handles refund questions --model gpt-4.1
+```
+
+**Options:**
+- `--model MODEL` — any LiteLLM-compatible model (default: `gpt-4.1`)
+
+The skill infers features from the description — mention MCP, A2A, hooks, or orchestration and the relevant components are added automatically.
+
 ### `/create-rag`
 
 Scaffold a ragbits **RAG application** with document ingestion, vector search, and LLM-powered Q&A.

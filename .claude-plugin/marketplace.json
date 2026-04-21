@@ -3,14 +3,34 @@
   "owner": {
     "name": "deepsense.ai"
   },
-  "description": "Scaffold ragbits applications from templates. Quickly generate chat apps, agents, RAGs, MCP servers and more.",
-  "version": "0.0.1",
-  "license": "MIT",
+  "metadata": {
+    "description": "Scaffold ragbits applications from templates. Quickly generate chat apps, agents, RAGs, MCP servers and more.",
+    "version": "0.1.0"
+  },
   "plugins": [
     {
       "name": "ragbits",
       "description": "Scaffold ragbits applications from templates. Quickly generate chat apps, agents, RAGs, MCP servers and more.",
-      "source": "./plugins/ragbits"
+      "source": "./plugins/ragbits",
+      "version": "0.1.0",
+      "license": "MIT",
+      "homepage": "https://deepsense.ai/rd-hub/ragbits/",
+      "repository": "https://github.com/deepsense-ai/ragbits-cc-plugin/",
+      "author": {
+        "name": "deepsense.ai",
+        "url": "https://deepsense.ai/"
+      },
+      "keywords": [
+        "ragbits",
+        "rag",
+        "agents",
+        "llm",
+        "chat",
+        "document-search",
+        "scaffolding",
+        "litellm"
+      ],
+      "category": "scaffolding"
     }
   ]
 }
