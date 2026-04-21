@@ -112,7 +112,7 @@ The UI renders the error and the user retries with a different file.
 
 ## When the Upload Is the Whole Point
 
-If the app is **primarily** document-grounded Q&A rather than chat with optional uploads, prefer the `document-search` feature (see `new-document-search.md`) or spin up a dedicated RAG via `create-rag`. `upload` is for ad-hoc attachments; `document-search` is for a curated corpus.
+If the app is **primarily** document-grounded Q&A rather than chat with optional uploads, prefer the `document-search` feature (see `new-document-search.md`) or spin up a dedicated RAG via `rag`. `upload` is for ad-hoc attachments; `document-search` is for a curated corpus.
 
 ## Validation Checklist
 

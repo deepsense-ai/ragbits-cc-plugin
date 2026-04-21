@@ -22,7 +22,7 @@ from ragbits.agents import Agent, ToolCall, ToolCallResult
 from ragbits.chat.interface.types import LiveUpdateType
 ```
 
-Add a system prompt via a `Prompt` subclass when the behavior is domain-specific — see `plugins/ragbits/skills/create-agent/references/agent-spec.md` for the full Agent spec.
+Add a system prompt via a `Prompt` subclass when the behavior is domain-specific — see `plugins/ragbits/skills/agent/references/agent-spec.md` for the full Agent spec.
 
 ## Tools Module
 
@@ -49,7 +49,7 @@ def example_tool(query: str) -> str:
 TOOLS = [example_tool]
 ```
 
-Tool quality matters — the LLM calls tools based on their docstrings and parameter names. See `plugins/ragbits/skills/create-agent/references/checklists/new-tool.md` for the full tool-writing checklist (type hints, docstring format, return-type rules).
+Tool quality matters — the LLM calls tools based on their docstrings and parameter names. See `plugins/ragbits/skills/agent/references/checklists/new-tool.md` for the full tool-writing checklist (type hints, docstring format, return-type rules).
 
 ## Constructor
 

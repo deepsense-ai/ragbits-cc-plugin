@@ -1,5 +1,5 @@
 ---
-name: create-chat
+name: chat
 description: Scaffold a new ragbits chat application. Triggers whenever the user wants to create, build, or set up a conversational chat app, chatbot, web assistant, or streaming Q&A interface powered by the ragbits library — including simple chat UIs, login-protected bots, feedback-enabled assistants, branded chat surfaces, file-upload chats, tool-using agent chats, and RAG-backed document chats served via the ragbits web UI. Use even for "build me a ragbits chatbot with a web UI", "I need a branded chat assistant", or "set up a streaming chat that calls my tools".
 ---
 

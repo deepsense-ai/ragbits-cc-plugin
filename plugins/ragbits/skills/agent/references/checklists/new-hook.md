@@ -53,7 +53,7 @@ Read the project directory to find:
 2. Existing tools defined or imported in the agent file
 3. Whether the project already has hooks registered
 
-If no ragbits agent is found, inform the user and ask them to create one first (e.g., with `/create-agent`).
+If no ragbits agent is found, inform the user and ask them to create one first (e.g., with `/agent`).
 
 ## Step 2: Generate Hook Code
 

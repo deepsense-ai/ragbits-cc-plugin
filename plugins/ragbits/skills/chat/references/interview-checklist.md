@@ -57,7 +57,7 @@ Ask if the chat needs to **do** things, not just reply:
 - Vector store preference? (`in-memory` for demos; `chroma`/`qdrant` for persistence)
 - How often do documents change — one-off ingest, daily, live?
 - Should the UI show citation chips linked back to the source, or keep answers clean?
-- See `plugins/ragbits/skills/create-rag/` for the RAG-first skill when document search is the primary purpose (rather than a chat add-on)
+- See `plugins/ragbits/skills/rag/` for the RAG-first skill when document search is the primary purpose (rather than a chat add-on)
 
 ## Deployment
 

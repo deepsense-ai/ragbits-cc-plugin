@@ -1,5 +1,5 @@
 ---
-name: create-agent
+name: agent
 description: Scaffold a new ragbits agent application. Triggers whenever the user wants to create, build, generate, or set up a new agent powered by the ragbits library — including simple chatbots, tool-using assistants, A2A servers, and multi-agent orchestrators. Use even for "build a ragbits agent that does X", "I need a bot that uses ragbits", or "make me a ragbits assistant".
 ---
 

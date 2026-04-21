@@ -1,5 +1,5 @@
 ---
-name: create-rag
+name: rag
 description: Scaffold a new ragbits RAG (Retrieval-Augmented Generation) application. Triggers whenever the user wants to create, build, or set up a RAG app, document search, knowledge base, question-answering system, or document-grounded chat powered by the ragbits library — including CLI search, web-based chat UIs, persistent vector stores, auth-protected knowledge bases, and reranker/rephraser-enhanced pipelines. Use even for "build a ragbits RAG over my docs", "I need a knowledge base with web UI", or "set up a document Q&A bot".
 ---
 

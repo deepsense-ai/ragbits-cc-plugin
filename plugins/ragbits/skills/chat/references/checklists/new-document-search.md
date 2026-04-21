@@ -2,7 +2,7 @@
 
 Quality gates for adding RAG (document search) to the generated chat application.
 
-When document search is the **primary** purpose of the app (not an add-on to a general chat), prefer the `create-rag` skill — it scaffolds a richer layout with a dedicated `ingest.py` factory, vector-store selection, optional rerankers and rephrasers, and deeper reference docs. This checklist covers the case where chat is primary and document-grounded answers are one capability among several.
+When document search is the **primary** purpose of the app (not an add-on to a general chat), prefer the `rag` skill — it scaffolds a richer layout with a dedicated `ingest.py` factory, vector-store selection, optional rerankers and rephrasers, and deeper reference docs. This checklist covers the case where chat is primary and document-grounded answers are one capability among several.
 
 ## Dependency
 
@@ -27,7 +27,7 @@ from ragbits.document_search import DocumentSearch
 from ragbits.document_search.documents.document import DocumentMeta
 ```
 
-Swap the vector store import for `ChromaVectorStore` or `QdrantVectorStore` when persistence is required — see `plugins/ragbits/skills/create-rag/references/checklists/new-vector-store.md` for the per-backend setup.
+Swap the vector store import for `ChromaVectorStore` or `QdrantVectorStore` when persistence is required — see `plugins/ragbits/skills/rag/references/checklists/new-vector-store.md` for the per-backend setup.
 
 ## Minimal Pattern — In-Memory with Auto-Ingest
 
@@ -68,7 +68,7 @@ class Chat(ChatInterface):
 
 ## Persistent Stores
 
-For Chroma or Qdrant, follow the per-backend recipes in `plugins/ragbits/skills/create-rag/references/checklists/new-vector-store.md`. The key difference: persistent stores skip the cache and the auto-ingest, so the user runs a one-time ingestion script. Add `ingest.py` alongside `app.py`:
+For Chroma or Qdrant, follow the per-backend recipes in `plugins/ragbits/skills/rag/references/checklists/new-vector-store.md`. The key difference: persistent stores skip the cache and the auto-ingest, so the user runs a one-time ingestion script. Add `ingest.py` alongside `app.py`:
 
 ```python
 # ingest.py
@@ -138,7 +138,7 @@ async def chat(
 
 ## Sample Document
 
-Copy `assets/sample.md` (bundled with `create-rag`) or a domain-appropriate placeholder into `{app-name}/documents/sample.md` so the user has something ingestible on first run. When this skill is invoked directly and no bundled sample exists, generate a short placeholder document that matches the app's stated domain.
+Copy `assets/sample.md` (bundled with `rag`) or a domain-appropriate placeholder into `{app-name}/documents/sample.md` so the user has something ingestible on first run. When this skill is invoked directly and no bundled sample exists, generate a short placeholder document that matches the app's stated domain.
 
 ## Combining with `agents`, `feedback`, `auth`, `theme`
 
@@ -156,4 +156,4 @@ All additive:
 - [ ] A `SYSTEM_PROMPT` instructs the LLM to ground answers in the context and refuse when context is insufficient
 - [ ] `documents/` folder exists with at least one sample file
 - [ ] README documents how to add documents and (for persistent stores) how to re-ingest
-- [ ] If document search is the primary feature, suggest the `create-rag` skill instead — it's purpose-built for this shape
+- [ ] If document search is the primary feature, suggest the `rag` skill instead — it's purpose-built for this shape

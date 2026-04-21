@@ -1,4 +1,4 @@
-# ragbits:create-chat
+# ragbits:chat
 
 Skill that scaffolds a new ragbits chat application — complete, immediately runnable, with the canonical `ChatInterface` + `LiteLLM` + `RagbitsAPI` pattern, and optional layers for auth, feedback, theming, tool-using agents, file upload, and document search.
 
@@ -14,7 +14,7 @@ Skill that scaffolds a new ragbits chat application — complete, immediately ru
 Invoking the skill with:
 
 ```
-/create-chat support-bot A product-support assistant that answers common questions --features auth,feedback,theme
+/chat support-bot A product-support assistant that answers common questions --features auth,feedback,theme
 ```
 
 should produce a `support-bot/` project with:
@@ -26,8 +26,8 @@ should produce a `support-bot/` project with:
 
 ## When to pick a different skill
 
-- **Document search is the primary purpose** (not a chat add-on) → use `ragbits:create-rag`. It ships with vector-store selection, a dedicated ingest script, and optional reranker/rephraser features.
-- **Building a headless agent** (CLI, cron job, A2A server, orchestrator) without a web UI → use `ragbits:create-agent`.
+- **Document search is the primary purpose** (not a chat add-on) → use `ragbits:rag`. It ships with vector-store selection, a dedicated ingest script, and optional reranker/rephraser features.
+- **Building a headless agent** (CLI, cron job, A2A server, orchestrator) without a web UI → use `ragbits:agent`.
 
 ## References
 

@@ -1,0 +1,137 @@
+{
+  "skill_name": "ragbits:evaluate",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Create a ragbits evaluation project called retrieval-bench that measures precision, recall, and F1 of a document search pipeline over a HuggingFace RAG dataset.",
+      "expected_output": "A retrieval-bench/ directory with pyproject.toml (ragbits-evaluate + ragbits-core + ragbits-document-search), README.md, retrieval_bench/__init__.py, and retrieval_bench/evaluate.py. evaluate.py builds a factory-style config dict with a DocumentSearchDataLoader (HuggingFaceSource), a DocumentSearchPipeline (vector_store + embedder + ingest_strategy + parser_router + source), and a DocumentSearchPrecisionRecallF1 metric with a RougeChunkMatch strategy. The main block calls Evaluator.run_from_config and prints both results.metrics and results.time_perf. Dependencies installed.",
+      "files": [],
+      "assertions": [
+        {
+          "name": "project_directory_created",
+          "description": "retrieval-bench/ directory exists"
+        },
+        {
+          "name": "evaluate_file_exists",
+          "description": "retrieval_bench/evaluate.py exists and imports Evaluator from ragbits.evaluate.evaluator"
+        },
+        {
+          "name": "init_file_exists",
+          "description": "retrieval_bench/__init__.py exists so the directory is a valid package"
+        },
+        {
+          "name": "document_search_deps_declared",
+          "description": "pyproject.toml lists ragbits-evaluate, ragbits-core, and ragbits-document-search"
+        },
+        {
+          "name": "factory_config_uses_document_search_types",
+          "description": "The config dict references ragbits.evaluate.dataloaders.document_search:DocumentSearchDataLoader, ragbits.evaluate.pipelines.document_search:DocumentSearchPipeline, and ragbits.evaluate.metrics.document_search:DocumentSearchPrecisionRecallF1 via the type: string pattern"
+        },
+        {
+          "name": "matching_strategy_configured",
+          "description": "The precision/recall metric's config contains a matching_strategy (RougeChunkMatch or equivalent) with an explicit threshold"
+        },
+        {
+          "name": "huggingface_source_used",
+          "description": "Both dataloader and pipeline reference ragbits.core.sources:HuggingFaceSource with a concrete dataset path (deepsense-ai/synthetic-rag-dataset_v1.0 or a user-supplied equivalent)"
+        },
+        {
+          "name": "evaluator_run_from_config_called",
+          "description": "evaluate.py's async main awaits Evaluator.run_from_config(config) and prints results.metrics plus results.time_perf fields (total_time_in_seconds, samples_per_second, latency_in_seconds)"
+        },
+        {
+          "name": "no_question_answer_imports",
+          "description": "evaluate.py does NOT import question-answer dataloaders, pipelines, or metrics — the target is document-search only"
+        },
+        {
+          "name": "readme_documents_metric_interpretation",
+          "description": "README.md tells the user what precision / recall / F1 mean in this context and how to swap the dataloader source for their own test set"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Build a ragbits evaluation called qa-judge that uses LLM-as-judge metrics (correctness, faithfulness, relevance) to score answer quality from our support bot. Use gpt-4o-mini as the judge model.",
+      "expected_output": "A qa-judge/ directory. pyproject.toml depends on ragbits-evaluate and ragbits-core (document-search optional if the QA pipeline retrieves). evaluate.py configures a QuestionAnswerDataLoader sourced from a HuggingFace dataset, a QA pipeline whose answer LLM is separate from the judge LLM, and three metrics — QuestionAnswerAnswerCorrectness, QuestionAnswerAnswerFaithfulness, and QuestionAnswerAnswerRelevance — each with its own llm_judge config referencing gpt-4o-mini. README surfaces the expected LLM call count and cost caveat.",
+      "files": [],
+      "assertions": [
+        {
+          "name": "project_directory_created",
+          "description": "qa-judge/ directory exists"
+        },
+        {
+          "name": "evaluate_deps_declared",
+          "description": "pyproject.toml lists ragbits-evaluate and ragbits-core"
+        },
+        {
+          "name": "qa_dataloader_used",
+          "description": "config.dataloader.type references ragbits.evaluate.dataloaders.question_answer:QuestionAnswerDataLoader (or a subclass)"
+        },
+        {
+          "name": "three_judge_metrics_wired",
+          "description": "config.metrics contains three entries referencing QuestionAnswerAnswerCorrectness, QuestionAnswerAnswerFaithfulness, and QuestionAnswerAnswerRelevance from ragbits.evaluate.metrics.question_answer"
+        },
+        {
+          "name": "judge_model_is_gpt_4o_mini",
+          "description": "Each metric's llm_judge config references gpt-4o-mini via LiteLLM"
+        },
+        {
+          "name": "judge_distinct_from_answer_model",
+          "description": "The pipeline's answer LLM and the metric judge LLMs are declared as separate config entries — the judge is not scoring its own output by construction"
+        },
+        {
+          "name": "readme_documents_cost_caveat",
+          "description": "README explicitly mentions that each metric × sample = one LLM call, surfaces the call count calculation, and recommends a cheap judge model"
+        },
+        {
+          "name": "evaluator_run_from_config_called",
+          "description": "evaluate.py awaits Evaluator.run_from_config(config) inside an async main and prints results.metrics"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Create a ragbits evaluation called rerank-sweep that measures retrieval F1 on our document corpus and runs an Optuna sweep over the retrieval k (1-10) and score_threshold (-1.5 to -0.5) to find the best config.",
+      "expected_output": "A rerank-sweep/ directory with pyproject.toml (ragbits-evaluate + ragbits-core + ragbits-document-search), evaluate.py (baseline document-search evaluation with precision/recall/F1), and optimize.py (Optuna sweep). optimize.py uses the same dataloader and metrics as evaluate.py but marks vector_store.default_options.k and score_threshold with {'optimize': True, 'range': [...]}. The main block calls Optimizer.run_from_config and persists results via log_optimization_to_file. README documents n_trials budget and how to promote a winning config back into evaluate.py.",
+      "files": [],
+      "assertions": [
+        {
+          "name": "project_directory_created",
+          "description": "rerank-sweep/ directory exists"
+        },
+        {
+          "name": "both_scripts_exist",
+          "description": "Both rerank_sweep/evaluate.py and rerank_sweep/optimize.py exist"
+        },
+        {
+          "name": "optimizer_import_present",
+          "description": "optimize.py imports Optimizer from ragbits.evaluate.optimizer and log_optimization_to_file from ragbits.evaluate.utils"
+        },
+        {
+          "name": "optimizer_direction_maximize",
+          "description": "optimize.py's config contains an optimizer block with direction: 'maximize' and an n_trials value"
+        },
+        {
+          "name": "k_is_optimized",
+          "description": "optimize.py marks vector_store.default_options.k with {'optimize': True, 'range': [1, 10]} (or an equivalent shape)"
+        },
+        {
+          "name": "score_threshold_is_optimized",
+          "description": "optimize.py marks vector_store.default_options.score_threshold with {'optimize': True, 'range': [-1.5, -0.5]}"
+        },
+        {
+          "name": "optimizer_run_from_config_called",
+          "description": "optimize.py's main calls Optimizer.run_from_config(config) and writes the result via log_optimization_to_file"
+        },
+        {
+          "name": "evaluate_and_optimize_share_dataloader_and_metrics",
+          "description": "The dataloader and metrics blocks in optimize.py match evaluate.py — the sweep measures the same thing the baseline measures"
+        },
+        {
+          "name": "readme_documents_trial_budget",
+          "description": "README surfaces n_trials × per-trial cost budgeting guidance and tells the user how to copy a winning config back into evaluate.py"
+        }
+      ]
+    }
+  ]
+}

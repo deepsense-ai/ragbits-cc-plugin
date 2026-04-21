@@ -1,4 +1,4 @@
-# ragbits:create-rag
+# ragbits:rag
 
 Skill that scaffolds a new ragbits RAG (Retrieval-Augmented Generation) application — complete, immediately runnable, with the canonical `LiteLLMEmbedder` + vector store + `DocumentSearch` pattern, wired either to a CLI Q&A loop or to a `ChatInterface` web UI.
 
@@ -17,7 +17,7 @@ Skill that scaffolds a new ragbits RAG (Retrieval-Augmented Generation) applicat
 Invoking the skill with:
 
 ```
-/ragbits:create-rag policy-qa A Q&A bot over our HR policy PDFs with a web UI, login, and like/dislike feedback --vector-store chroma
+/ragbits:rag policy-qa A Q&A bot over our HR policy PDFs with a web UI, login, and like/dislike feedback --vector-store chroma
 ```
 
 should produce a `policy-qa/` project with:

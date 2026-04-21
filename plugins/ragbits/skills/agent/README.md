@@ -1,4 +1,4 @@
-# ragbits:create-agent
+# ragbits:agent
 
 Skill that scaffolds a new ragbits agent application — complete, immediately runnable, with the canonical `Agent` + `Prompt` + `LiteLLM` + tools pattern.
 
@@ -12,7 +12,7 @@ Skill that scaffolds a new ragbits agent application — complete, immediately r
 
 ## Example: Reddit daily digest agent
 
-This repository includes a full specification you can hand to **ragbits:create-agent** as the agent description (paste the file contents, or attach `@examples/create-reddit-agent.txt` in Cursor).
+This repository includes a full specification you can hand to **ragbits:agent** as the agent description (paste the file contents, or attach `@examples/create-reddit-agent.txt` in Cursor).
 
 The prompt in [`examples/create-reddit-agent.txt`](../../../../examples/create-reddit-agent.txt) asks for a **once-per-day** Ragbits agent that:
 
