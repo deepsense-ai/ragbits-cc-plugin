@@ -20,6 +20,20 @@ If `$ARGUMENTS` is empty and there is no prior context describing what to build,
 
 Generate immediately after receiving an answer — do not ask follow-up questions.
 
+## Select Architecture
+
+Before generating files, read `references/agent-architectures.md` and pick one pattern based on the description. Default to **tool-use agent** unless the description clearly signals something else. Do not ask the user — infer from the description and mention the chosen pattern in the final summary so they can override.
+
+| Description signals | Pattern |
+|---------------------|---------|
+| Single-purpose assistant, "answer / help with / explain / summarize" | Tool-use agent (default) |
+| "First X then Y", "extract then format", fixed pipeline / stages | Prompt chaining |
+| "Classify / triage / route", disjoint categories (refund vs. tech vs. billing), "dispatch to" | Routing |
+| "Orchestrate / coordinate / delegate", multi-agent, A2A, dynamic subtasks | Orchestrator-workers |
+| "Iteratively improve / refine / critique / revise", quality loop, generator + judge | Evaluator-optimizer |
+
+Generate `agent.py` shaped around the chosen pattern — add the classifier + specialist prompts for routing, generator + critic for evaluator-optimizer, etc. The base template below is the tool-use shape; use the sketches in `agent-architectures.md` as the reference for the other four.
+
 ## Project Structure
 
 ```
@@ -176,6 +190,7 @@ If the description (or user message) mentions any of the following, read the cor
 | orchestrate / coordinate / remote agents / multi-agent | `references/checklists/new-a2a.md` | Orchestrator with remote agent discovery | `ragbits[a2a]` |
 
 For advanced patterns (streaming, structured output, conversation history, tool context injection), see `references/agent-spec.md`.
+For multi-agent architectural patterns (chaining, routing, orchestrator-workers, evaluator-optimizer), see `references/agent-architectures.md`.
 
 ## Install Dependencies
 
@@ -209,7 +224,7 @@ Wait for installation to complete. If it fails, show the error and suggest a fix
 After creating all files and installing dependencies, print:
 
 ```
-Created {app-name}/
+Created {app-name}/  (architecture: {chosen-pattern})
   {app_name_snake}/agent.py    — agent, prompt, entry point
   {app_name_snake}/tools.py    — tool functions (customize these)
   pyproject.toml               — project + dependencies
@@ -222,6 +237,7 @@ Run:
 Next steps:
   • Edit tools.py — replace example_tool with your real tools
   • Tune the system_prompt in agent.py for your domain
+  • Change architecture: see references/agent-architectures.md
   • Add hooks (logging, guardrails): see references/checklists/new-hook.md
   • Add MCP servers: see references/checklists/new-mcp.md
   • Expose as A2A: see references/checklists/new-a2a.md

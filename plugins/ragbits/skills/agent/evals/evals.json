@@ -112,6 +112,54 @@
           "description": "If A2A server code is present, imports are from ragbits.agents.a2a.server (create_agent_server) and get_agent_card is called as an Agent method — not imported as a free function"
         }
       ]
+    },
+    {
+      "id": 4,
+      "prompt": "Create a ragbits agent called ticket-triage that first classifies incoming support tickets into refund, tech, or billing, then routes each ticket to a specialist prompt that handles that category",
+      "expected_output": "A ticket-triage/ directory scaffolded with the routing architecture: agent.py contains a classifier Prompt returning a structured category plus separate specialist Prompts per category, and a dispatch function that picks the specialist based on the classifier output.",
+      "files": [],
+      "assertions": [
+        {
+          "name": "project_directory_created",
+          "description": "ticket-triage/ directory exists"
+        },
+        {
+          "name": "agent_file_exists",
+          "description": "ticket_triage/agent.py exists"
+        },
+        {
+          "name": "classifier_prompt_present",
+          "description": "agent.py defines a classifier Prompt whose output type is a structured Pydantic model or Enum representing the ticket category (not a free-text string)"
+        },
+        {
+          "name": "specialist_prompts_present",
+          "description": "agent.py defines at least two distinct specialist Prompt classes with different system_prompts (one per category), not a single shared prompt"
+        },
+        {
+          "name": "dispatch_uses_classifier_output",
+          "description": "agent.py contains dispatch logic (dict lookup, match, or if/elif chain) that selects the specialist based on the classifier's structured output"
+        },
+        {
+          "name": "structured_output_enabled",
+          "description": "The classifier's LiteLLM is configured with use_structured_output=True so the category parses reliably"
+        },
+        {
+          "name": "system_prompt_is_domain_specific",
+          "description": "The classifier and specialist system_prompts reference support tickets and their categories — not generic assistant text"
+        },
+        {
+          "name": "pyproject_has_ragbits",
+          "description": "pyproject.toml lists ragbits as a dependency"
+        },
+        {
+          "name": "readme_exists",
+          "description": "README.md exists"
+        },
+        {
+          "name": "unwraps_agent_result_content",
+          "description": "agent.py reads result.content from the AgentResult for both the classifier and the specialist call"
+        }
+      ]
     }
   ]
 }
