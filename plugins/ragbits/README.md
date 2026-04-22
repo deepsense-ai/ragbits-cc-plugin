@@ -1,6 +1,6 @@
 # Ragbits Claude Code Plugin
 
-Scaffold ready-to-run [ragbits](https://ragbits.deepsense.ai) applications directly from Claude Code. Three skills cover the common shapes of a ragbits project: conversational chat apps, tool-using agents, and RAG pipelines.
+Scaffold ready-to-run [ragbits](https://ragbits.deepsense.ai) applications directly from Claude Code. Five skills cover the common shapes of a ragbits project: conversational chat apps, tool-using agents, RAG pipelines, evaluation harnesses, and MCP servers.
 
 ## Install
 
@@ -61,6 +61,19 @@ Scaffold a ragbits evaluation project — benchmark retrieval precision/recall/F
 
 Targets: `document-search`, `question-answer`, `custom`.
 Features: `optimize`, `dataset-generator`, `custom-metric`, `custom-pipeline`.
+
+### `/mcp`
+
+Scaffold an MCP (Model Context Protocol) server that exposes a ragbits agent, RAG pipeline, or prompt to MCP clients like Claude Desktop, Claude Code, or Cursor. Uses FastMCP for the server surface; each tool body delegates to a ragbits primitive.
+
+```
+/mcp docs-mcp Expose our product documentation RAG to Claude Desktop --backend rag
+```
+
+Backends: `agent`, `rag`, `prompt`, `plain` (inferred from the description when omitted).
+Transports: `stdio` (default, for Claude Desktop / Code), `sse`, `streamable-http`.
+
+This is the server direction — exposing ragbits to external MCP clients. For the opposite direction (a ragbits agent consuming an external MCP server), use `/agent` with an MCP-capable description.
 
 ## Prerequisites
 

@@ -1,0 +1,125 @@
+{
+  "skill_name": "ragbits:mcp",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Create a ragbits MCP server called support-mcp that exposes our support-triage ragbits agent so Claude Desktop can call it",
+      "expected_output": "A support-mcp/ directory with pyproject.toml (mcp[cli] + ragbits-agents), README.md, support_mcp/__init__.py, support_mcp/server.py (FastMCP instance + @mcp.tool() + mcp.run('stdio') + main), and support_mcp/backend.py (module-level ragbits Agent + Prompt + LiteLLM singleton, ask() unwraps result.content). README includes mcp dev smoke test and Claude Desktop mcpServers JSON snippet. Dependencies installed.",
+      "files": [],
+      "assertions": [
+        {
+          "name": "project_directory_created",
+          "description": "support-mcp/ directory exists"
+        },
+        {
+          "name": "server_file_uses_fastmcp",
+          "description": "support_mcp/server.py imports FastMCP from mcp.server.fastmcp and constructs a FastMCP instance"
+        },
+        {
+          "name": "server_has_tool_decorator",
+          "description": "server.py declares at least one @mcp.tool() function"
+        },
+        {
+          "name": "server_transport_is_stdio",
+          "description": "server.py calls mcp.run with transport='stdio' (the Claude Desktop-compatible default)"
+        },
+        {
+          "name": "backend_file_has_agent",
+          "description": "support_mcp/backend.py imports ragbits.agents.Agent and constructs it at module scope"
+        },
+        {
+          "name": "backend_unwraps_agent_result",
+          "description": "backend.py reads result.content from AgentResult rather than returning the full AgentResult"
+        },
+        {
+          "name": "pyproject_has_mcp_and_ragbits",
+          "description": "pyproject.toml lists both mcp (with cli extra) and ragbits-agents as dependencies"
+        },
+        {
+          "name": "readme_has_claude_desktop_snippet",
+          "description": "README.md includes a JSON mcpServers example suitable for claude_desktop_config.json"
+        },
+        {
+          "name": "init_file_exists",
+          "description": "support_mcp/__init__.py exists"
+        },
+        {
+          "name": "no_reference_to_nonexistent_ragbits_mcp_server",
+          "description": "No imports from ragbits.mcp.server or ragbits[mcp-server] (this module does not exist)"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Create a ragbits MCP server called docs-mcp that exposes our product documentation RAG as a search_docs tool for Claude Desktop",
+      "expected_output": "A docs-mcp/ directory. pyproject.toml includes mcp[cli] and ragbits-document-search (+ a vector-store extra on ragbits-core). docs_mcp/backend.py defines a lifespan context manager that constructs a ChromaVectorStore (or similar) + LiteLLMEmbedder + DocumentSearch. docs_mcp/server.py registers FastMCP with the lifespan and declares a search_docs(query, top_k) tool returning a list of {text, score, source} dicts. README covers vector-store credentials and the mcp dev smoke test.",
+      "files": [],
+      "assertions": [
+        {
+          "name": "project_directory_created",
+          "description": "docs-mcp/ directory exists"
+        },
+        {
+          "name": "backend_uses_document_search",
+          "description": "backend.py imports DocumentSearch from ragbits.document_search and instantiates it"
+        },
+        {
+          "name": "backend_has_lifespan_context",
+          "description": "backend.py defines an @asynccontextmanager lifespan function wired into FastMCP(..., lifespan=lifespan)"
+        },
+        {
+          "name": "search_docs_tool_exists",
+          "description": "server.py declares a @mcp.tool() named search_docs (or equivalent) accepting query and top_k"
+        },
+        {
+          "name": "returns_structured_passages",
+          "description": "search_docs returns a list of dicts with text / score / source keys (not raw DocumentSearch Element objects)"
+        },
+        {
+          "name": "pyproject_has_document_search",
+          "description": "pyproject.toml lists ragbits-document-search and at least one ragbits-core vector-store extra"
+        },
+        {
+          "name": "readme_mentions_smoke_test",
+          "description": "README.md describes running mcp dev to smoke-test the server"
+        },
+        {
+          "name": "no_print_in_tool_bodies",
+          "description": "Tool bodies use logging.info / logger — no stdout print() calls that would corrupt the stdio protocol"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Create a ragbits MCP server called classify-mcp that exposes a single classify_ticket tool backed by a typed ragbits Prompt — structured output with category, urgency (1-5), and reason",
+      "expected_output": "A classify-mcp/ directory. pyproject.toml includes mcp[cli] and ragbits-core. classify_mcp/backend.py declares a Prompt[ClassifyInput, Classification] subclass (Classification = Pydantic with category, urgency, reason) and a LiteLLM(use_structured_output=True) singleton. classify_mcp/server.py exposes a classify_ticket tool whose return type is the Classification Pydantic model so FastMCP emits a structured schema.",
+      "files": [],
+      "assertions": [
+        {
+          "name": "project_directory_created",
+          "description": "classify-mcp/ directory exists"
+        },
+        {
+          "name": "prompt_has_two_generic_params",
+          "description": "The Prompt subclass is parameterized with both input and output models (Prompt[Input, Output])"
+        },
+        {
+          "name": "output_model_is_pydantic",
+          "description": "The Classification model is a Pydantic BaseModel with category, urgency (int 1-5), and reason fields"
+        },
+        {
+          "name": "litellm_uses_structured_output",
+          "description": "LiteLLM is constructed with use_structured_output=True"
+        },
+        {
+          "name": "tool_return_type_is_pydantic",
+          "description": "The @mcp.tool() function's return type annotation is the Classification Pydantic model (drives FastMCP's output schema)"
+        },
+        {
+          "name": "pyproject_has_core_not_agents",
+          "description": "pyproject.toml lists ragbits-core; ragbits-agents is NOT required for the prompt backend"
+        }
+      ]
+    }
+  ]
+}

@@ -64,6 +64,21 @@ Scaffold a ragbits **evaluation project** that measures RAG / retrieval / answer
 - `--embedding-model MODEL` — embedding model (default: `text-embedding-3-small`)
 - `--features` — comma-separated: `optimize`, `dataset-generator`, `custom-metric`, `custom-pipeline`
 
+### `/mcp`
+
+Scaffold an **MCP (Model Context Protocol) server** that exposes a ragbits agent, RAG pipeline, or prompt to any MCP client (Claude Desktop, Claude Code, Cursor). Built as a bridge: the official `mcp` SDK (FastMCP) hosts the server, ragbits primitives power the tool bodies.
+
+```
+/mcp docs-mcp Expose our product documentation RAG to Claude Desktop --backend rag
+```
+
+**Options:**
+- `--backend BACKEND` — `agent`, `rag`, `prompt`, or `plain` (inferred from the description by default)
+- `--transport TRANSPORT` — `stdio` (default), `sse`, or `streamable-http`
+- `--model MODEL` — LiteLLM-compatible model for LLM-backed tools (default: `gpt-4.1`)
+
+Note: `/agent` covers the *client* direction (a ragbits agent calling an external MCP server). `/mcp` is the *server* direction — exposing ragbits capabilities to external MCP clients.
+
 ## Installation
 
 Add the plugin to your Claude Code project:
